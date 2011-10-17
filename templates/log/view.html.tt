@@ -1,0 +1,33 @@
+<div id="overview">
+<form name="overview" method="post">
+<select name="domain" onChange="this.form.submit();">
+[% FOREACH dom IN domains %]
+    <option value="[% dom %]"[% domain == dom ? 'selected="selected"' : '' %]>[% dom %]</option>
+[% END %]
+</select>
+<input class="button" type="submit" name="go" value="[% i18n('pViewlog_button') %]" />
+</form>
+</div>
+
+[% IF log.size %]
+    <table id="log_table">
+        <tr><td colspan="5"><h3>[% i18n('pViewlog_welcome') _ ' '  _ domain %]</h3></td></tr>
+        <tr class="header">
+           <td>[% i18n('pViewlog_timestamp') %]</td>
+           <td>[% i18n('pViewlog_username') %]</td>
+           <td>[% i18n('pViewlog_domain') %]</td>
+           <td>[% i18n('pViewlog_action') %]</td>
+           <td>[% i18n('pViewlog_data') %]</td>
+        </tr>
+        [% FOREACH line IN log %]
+            [%# TODO clip the log lines like postfixadmin? Seems stupid. %]
+            <tr class="hilightoff" onMouseOver="className='hilighton';" onMouseOut="className='hilightoff';" onclick="alert([% i18n('pViewlog_data') ' = ' _ line.data %])">
+                <td nowrap="nowrap">[% line.timestamp %]</td>
+                <td nowrap="nowrap">[% line.username %]</td>
+                <td nowrap="nowrap">[% line.domain %]</td>
+                <td nowrap="nowrap">[% i18n('pViewlog_action_' _ line.action) %]</td>
+                <td nowrap="nowrap">[% $line.data %]</td>
+            </tr>
+        [% END %]
+    </table>
+[% END %]

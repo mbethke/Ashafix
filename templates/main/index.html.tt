@@ -1,0 +1,34 @@
+<div id="main_menu">
+<table>
+    <tr>
+        <td nowrap><a target="_top" href="[% urlfor('domain-list') %]">[% i18n('pMenu_overview') %]</a></td>
+        <td>[% i18n('pMain_overview') %]</td>
+    </tr>
+    <tr>
+        <td nowrap><a target="_top" href="[% urlfor('alias-create') %]">[% i18n('pMenu_create_alias') %]</a></td>
+        <td>[% i18n('pMain_create_alias') %]</td>
+    </tr>
+    <tr>
+        <td nowrap><a target="_top" href="[% urlfor('mailbox-create') %]">[% i18n('pMenu_create_mailbox') %]</a></td>
+        <td>[% i18n('pMain_create_mailbox') %]</td>
+    </tr>
+    [% IF conf.sendmail %]
+        <tr>
+            <td nowrap><a target="_top" href="sendmail">[% i18n('pMenu_sendmail') %]</a></td>
+            <td>[% i18n('pMain_sendmail') %]</td>
+        </tr>
+    [% END %]
+    <tr>
+        <td nowrap><a target="_top" href="password">[% i18n('pMenu_password') %]</a></td>
+        <td>[% i18n('pMain_password') %]</td>
+    </tr>
+    <tr>
+        <td nowrap><a target="_top" href="viewlog">[% i18n('pMenu_viewlog') %]</a></td>
+        <td>[% i18n('pMain_viewlog') %]</td>
+    </tr>
+    <tr>
+        <td nowrap><a target="_top" href="logout">[% i18n('pMenu_logout') %]</a></td>
+        <td>[% i18n('pMain_logout') %]</td>
+    </tr>
+</table>
+</div>

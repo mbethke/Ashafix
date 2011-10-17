@@ -1,0 +1,44 @@
+<div id="login">
+<form name="login" method="post">
+<table id="login_table" cellspacing="10">
+    <tr>
+        <td colspan="2"><h4>[% i18n('pLogin_welcome') %]</h4></td>
+    </tr>
+    <tr>
+        <td>[% i18n('pLogin_username') _ ":";  %]</td>
+        <td><input class="flat" type="text" name="fUsername" value="" /></td>
+    </tr>
+    <tr>
+        <td>[% i18n('pLogin_password') _ ":";  %]</td>
+        <td><input class="flat" type="password" name="fPassword" /></td>
+    </tr>
+    <tr>
+        <td colspan="2">
+            <select name="lang" xml:lang="en" dir="ltr">
+            [% FOREACH langpair IN supported_languages %]
+                [% sel = langpair.key == h.languages ? ' selected="selected"' : '' %]
+                <option value="[% langpair.key %]"[% sel %]>[% langpair.value %]</option>
+            [% END %]
+            </select>
+        </td>
+   </tr>
+   <tr>
+      <td colspan="2" class="hlp_center"><input class="button" type="submit" name="submit" value="[% i18n('pLogin_button') %]" /></td>
+   </tr>
+   <tr>
+      <td colspan="2" class="standout">
+            [% tMessage %]
+      </td>
+   </tr>
+   <tr>
+      <td colspan="2"><a href="users/">[% i18n('pLogin_login_users') %]</a></td>
+   </tr>
+</table>
+</form>
+
+<script tyle="text/javascript"><!--
+	document.login.fUsername.focus();
+// -->
+</script>
+
+</div>

@@ -1,0 +1,64 @@
+[% INCLUDE menu.tt %]
+<div id="overview">
+<form name="overview" method="post">
+<select name="fUsername" onChange="this.form.submit()>
+[% IF admins.defined %]
+    [% FOREACH admin IN admins %]
+        [% selected = fUsername == admin ? ' selected="selected"' : '' %]
+        <option value="[% admin %]"[% selected %]>[% admin %]</option>
+    [% END %]
+[% END %]
+</select>
+<input class="button" type="submit" name="go" value="[% i18n('pOverview_button') %]" />
+</form>
+<form name="search" method="post" action="search">
+<input type="textbox" name="search" size="10" />
+</form>
+</div>
+
+[% IF domainprops.defined and domainprops.size %]
+    <table id="admin_table">
+        <tr class="header">
+            <td>[% i18n('pAdminList_domain_domain') %]</td>
+            <td>[% i18n('pAdminList_domain_description') %]</td>
+            <td>[% i18n('pAdminList_domain_aliases') %]</td>
+            <td>[% i18n('pAdminList_domain_mailboxes') %]</td>
+            [% IF conf.quota %]
+                <td>[% i18n('pAdminList_domain_maxquota') %]</td>
+            [% END %]
+            [% IF conf.transport %]
+                <td>[% i18n('pAdminList_domain_transport') %]</td>
+            [% END %]
+            <td>[% i18n('pAdminList_domain_backupmx') %]</td>
+            <td>[% i18n('pAdminList_domain_modified') %]</td>
+            <td>[% i18n('pAdminList_domain_active') %]</td>
+            <td colspan="2">&nbsp;</td>
+        </tr>
+        [% FOREACH dprop IN domainprops.values %]
+            <tr class="hilightoff" onMouseOver="className='hilighton' onMouseOut="className='hilightoff'>
+                <td><a href="list-virtual?domain=[% dprop.domain %]">[% dprop.domain %]</a></td>
+                <td>[% dprop.description %]</td>
+                <td>[% dprop.alias_count %] / [% dprop.aliases %]</td>
+                <td>[% dprop.mailbox_count %] / [% dprop.mailboxes %]</td>                
+            [% IF conf.quota %]
+                [% IF 0 == dprop.maxquota %]
+                    <td>[% i18n('pOverview_unlimited') %]</td>
+                [% ELSIF 0 > dprop.maxquota %]
+                    <td>[% i18n('pOverview_disabled') %]</td>
+                [% ELSE %]
+                    <td>[% dprop.maxquota %]</td>
+                [% END %]
+            [% END %]
+            [% IF conf.transport %]
+                <td>[% dprop.transport %]</td>
+            [% END %]
+            <td>[% i18n(dprop.backupmx ? 'YES' : 'NO') %]</td>
+            <td>[% dprop.modified %]</td>
+            <td><a href="toggleactive?domain=[% dprop.domain %]">[% i18n(dprop.active ? 'YES' : 'NO') %]</a></td>
+            <td><a href="edit?domain=[% dprop.domain %]">[% i18n('edit') %]</a></td>
+            <td><a href="delete?domain=[% dprop.domain %]" onclick="return confirm('[% i18n('confirm_domain') _ h.l('pAdminList_admin_domain') _ ": " _ dprop.domain %]'">[% h.l('del') %]</a></td>
+            </tr>
+        [% END %]
+   </table>
+[% END %]
+<p><a href='create-domain'>[% i18n('pAdminMenu_create_domain') %]</a>

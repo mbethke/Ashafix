@@ -1,0 +1,21 @@
+[% INCLUDE menu.tt %]
+<table id="admin_table">
+   <tr class="header">
+      <td>[% i18n('pAdminList_admin_username') %]</td>
+      <td>[% i18n('pAdminList_admin_count') %]</td>
+      <td>[% i18n('pAdminList_admin_modified') %]</td>
+      <td>[% i18n('pAdminList_admin_active') %]</td>
+      <td colspan="2">&nbsp;</td>
+   </tr>
+   [% FOREACH ap IN admins.pairs %]
+      <tr class="hilightoff" onMouseOver="className='hilighton';" onMouseOut="className='hilightoff';">
+         <td><a href="[% urlfor('domain-list', username=ap.key) %]">[% ap.key %]</a></td>
+         <td>[% 'ALL' == ap.value.domain_count ? i18n('pAdminEdit_admin_super_admin') : ap.value.domain_count %]</td>
+         <td>[% ap.value.modified %]</td>
+         <td><a href="[% urlfor('admin-setactive', username=ap.key, active=(not ap.value.active)) %]">[% ap.value.active ? i18n('YES') : h.l('NO') %]</a></td>
+         <td><a href="[% urlfor('admin-edit', username=ap.key) %]">[% i18n('edit') %]</a></td>
+         <td><a href="[% urlfor('admin-delete', username=ap.key) %]" onclick="return confirm ('[% i18n('confirm') _ h.l('pAdminList_admin_username') _ ': ' _ ap.key %]')">[% h.l('del') %]</a></td>
+   	  </tr>
+   [% END %]
+</table>
+<p><a href="[% urlfor('admin-create') %]">[% i18n('pAdminMenu_create_admin') %]</a></p>

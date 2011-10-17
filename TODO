@@ -1,0 +1,10 @@
+- Remove Data::Dumper use
+- RESTify application
+- Fix layout to align menu and content blocks
+- Make <Hx> elements respect logical levels (top is H1 etc.) and style them using CSS
+  instead of selecting them by what "usually looks the right size" 
+- Fatten the Model classes with more business logic that shouldn't be in the
+  Controllers
+- Remove silly distinction between PHP->Form and Form->PHP variable names f* and t*
+- Decide whether to use whitespace-chomping TT tags (source looks better, more work)
+  or aggressively chomp using TT options (smaller)

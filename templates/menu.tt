@@ -1,0 +1,101 @@
+[%# Create a menu link with a named routes as symbolic URL %]
+[% MACRO menulinknamed(name, title, submenu) BLOCK;
+    realurl = urlfor(name);
+    menulink(realurl, title, submenu);
+END %]
+
+[%# Create a menu link with a real URL %]
+[% MACRO menulink(href, title, submenu) BLOCK %]
+    [% ttloc = i18n(title) %]
+    <li><a target="_top" href="[% href %]">[% ttloc %]</a>
+    [% IF submenu %]
+        <ul><li><a target="_top" href="[% href %]">[% ttloc %]</a></li>[% submenu %]</ul>
+    [% END %]
+    </li>
+[% END %]
+
+[%# Resolve symbolic URL and append a "?domain=..." parameter if get_domain is set %]
+[% MACRO domurl(url) BLOCK;
+    IF get_domain;
+        urlfor(url, domain=get_domain);
+    ELSE;
+        urlfor(url);
+    END;
+END %]
+
+<div id='menu'>
+<ul>
+
+[% get_domain = c.req.url.query.param('domain') %]
+
+[% submenu_virtual = BLOCK;
+    durl = domurl('mailbox-create');
+    menulink(durl, 'pMenu_create_mailbox');
+    durl = domurl('alias-create');
+    menulink(durl, 'pMenu_create_alias');
+    IF conf.alias_domain;
+        durl = domurl('domain-create-alias');
+        menulink(durl, 'pMenu_create_alias_domain');
+    END;
+END %]
+
+[% IF c.session.user.roles.globaladmin %]
+    [% submenu_domain   = BLOCK; menulinknamed('domain-create', 'pAdminMenu_create_domain');    END %]
+    [% submenu_sendmail = BLOCK; menulinknamed('message-send', 'pAdminMenu_broadcast_message'); END %]
+    [% submenu_admin    = BLOCK; menulinknamed('admin-create', 'pAdminMenu_create_admin');      END %]
+    [% menulinknamed('admin-list', 'pAdminMenu_list_admin', submenu_admin) %]
+[% ELSE %]
+    [% submenu_domain = ''; submenu_sendmail = '' %]
+    [% menulinknamed('index', 'pMenu_main') %]
+[% END %]
+
+[% menulinknamed('domain-list', 'pAdminMenu_list_domain', submenu_domain) %]
+[% IF c.session('list_virtual_sticky_domain');
+        SET url = urlfor('virtual-list', domain=c.session('list_virtual_sticky_domain'));
+    ELSE;
+        SET url = urlfor('virtual-list');
+END;
+menulink(url, 'pAdminMenu_list_virtual', submenu_virtual) %]
+
+[% IF conf.fetchmail %]
+    [% submenu_fetchmail = BLOCK; menulinknamed('fetchmail-run', 'pFetchmail_new_entry');   END %]
+    [% menulinknamed('fetchmail-run', 'pMenu_fetchmail', submenu_fetchmail) %]
+[% END %]
+
+[% IF conf.sendmail %]
+    [% menulinknamed('mail-send', 'pMenu_sendmail', submenu_sendmail) %]
+[% END %]
+
+[% menulinknamed('password-change', 'pMenu_password') %]
+
+[%# TODO if !pgsql %]
+[% IF user.roles.globaladmin and conf.backup %]
+   [% menulinknamed('backup-run', 'pAdminMenu_backup') %]
+[% END %]
+
+[% menulinknamed('log-view', 'pMenu_viewlog') %]
+[% menulinknamed('logout', 'pMenu_logout') %]
+
+</ul>
+</div>
+
+<br clear='all' /><p />
+
+[%# TODO do we want motd? %]
+
+[%# IE can't handle :hover dropdowns correctly. It needs some JS instead. %]
+<script type='text/javascript'>
+sfHover = function() {
+   var sfEls = document.getElementById("menu").getElementsByTagName("li");
+      for (var i=0; i<sfEls.length; i++) {
+         sfEls[i].onmouseover=function() {
+            this.className+=" sfhover";
+         }
+         sfEls[i].onmouseout=function() {
+            this.className=this.className.replace(new RegExp(" sfhover\\b"), "");
+         }
+   }
+}
+if (window.attachEvent) window.attachEvent("onload", sfHover);
+</script>
+

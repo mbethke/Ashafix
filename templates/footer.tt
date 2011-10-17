@@ -1,0 +1,12 @@
+<div id="footer">
+<a target="_blank" href="http://towiski.de/ashafix/">Ashafix [% const.version %]</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
+[% h.session.defined('username') ? h.sprintf(i18n('pFooter_logged_as'), h.session.username) : '' %]
+&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;<a target="_blank" href="http://nowhere.invalid/update?version=[% const.version %]">[% i18n('check_update') %]</a>
+
+[% IF conf.show_footer_text and conf.footer_link.defined %]
+&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
+<a href="[% conf.footer_link %]">[% conf.footer_text %]</a>
+[% END %]
+
+</body>
+</html>

@@ -1,0 +1,312 @@
+[%# Stash Variables 
+   string   domain (current domain)
+   int      current_limit
+   hash     limit (keys: aliases, mailboxes, maxquota, alias_count, alias_pgindex_count, mailbox_count, mbox_pgindex_count)
+   list     domains (all domains for current user)
+   bool     can_add_alias
+   bool     can_add_mailbox
+   ?        display_back_show
+   ?        display_back
+   list     mailbox
+   int      highlight_at
+
+   POST variables
+   string   search
+   int      limit
+%]
+[% INCLUDE 'menu.tt' %]
+[%# TODO ?REDO FROM START
+    This file is a showcase of how not to write views. Although with TT it
+    doesn't quite make you want to gouge your eyes out any more like the PHP
+    version, it's still far too complex. Most of this stuff belongs in the
+    controller or model %]
+
+[%# TODO create a proper class with highlighting stringify method for
+search results %]
+[% MACRO searchhl(text) PERL %]
+   my $search = $stash->get('search');
+   my $s = $search;
+   if('' eq $s){
+      print $text
+   } else {
+      $s    =~ s'[][()$&.]'\\&'g;
+      $text =~ s!$s!<span class='searchresult' style='background:lightgreen'>$search</span>!gi;
+      print $text;
+   }
+[% END %]
+
+
+[% MACRO show_back_up_next(anchor) BLOCK %]
+   [% _anchor = anchor.defined ? '#' _ anchor : '' %]
+   [% IF display_back_show %]
+      <a href="[% urlfor('', domain=domain, limit=display_back) _ anchor %]"><img border="0" src="[% urlfor('/images/arrow-l.png') %]" title="[% i18n('pOverview_left_arrow') %]" alt="[% i18n('pOverview_left_arrow') %]" /></a>
+   [% END %]
+   [% IF display_up_show %]
+      <a href="[% urlfor('', domain=domain, limit=0) _ anchor %]"><img border="0" src="[% urlfor('/images/arrow-u.png') %]" title="[% i18n('pOverview_up_arrow') %]" alt="[% i18n('pOverview_up_arrow') %]" /></a>
+   [% END %]
+   [% IF display_next_show %]
+      <a href="[% urlfor('', domain=domain, limit=display_next) _ anchor %]"><img border="0" src="[% urlfor('/images/arrow-r.png') %]" title="[% i18n('pOverview_right_arrow') %]" alt="[% i18n('pOverview_right_arrow') %]" /></a>
+   [% END %]
+[% END %]
+
+
+
+
+[% returnto = urlfor('virtual-list', domain=domain, limit=current_limit) %]
+
+<div id="overview">
+<form name="overview" method="get">
+
+[% FOREACH elem IN [ 'aliases', 'mailboxes', 'maxquota' ];
+   IF    limit.$elem <  0; i18n('pOverview_disabled');
+   ELSIF limit.$elem == 0; i18n('pOverview_unlimited');
+   ELSE; limit.$elem;
+END %]
+
+<select name="domain" onChange="this.form.submit();">
+[% FOREACH dom IN domains %]
+   <option value="[% dom %]"[% domain == dom ? ' selected+"selected"' : '' %]>[% dom %]</option>
+[% END %]
+</select>
+
+<input type="hidden" name="limit" value="0" />
+<input class="button" type="submit" name="go" value="[% i18n('pOverview_button') %]" />
+</form>
+
+<h4>[% i18n('pOverview_welcome') _ $domain %]</h4>
+<p>[% i18n('pOverview_alias_alias_count') _ ": " _ limit.alias_count _ ' / ' _ limit.aliases %]</p>
+<p>[% i18n('pOverview_alias_mailbox_count') _ ": " _ limit.mailbox_count _ " / " _ limit.mailboxes %]</p>
+<form name="search" method="post" action="[% urlfor('virtual-search') %]">[% i18n('pSearch') %]:
+   <input type="textbox" name="search" size="10" />
+</form>
+</div>
+
+
+[% IF conf.alias_domain %]
+   [%# ((sizeof ($tAliasDomains) > 0) || (is_array ($tTargetDomain) %]
+   [% IF aliasdomains.size or targetdomain.defined %]
+      <table id="alias_domain_table">
+         <tr>
+            <td colspan="4"><h3>[% i18n('pOverview_alias_domain_title') %]</h3></td>
+         </tr>
+         [% IF aliasdomains.size %]
+            <tr class=\"header\">
+               <td>[% h.sprintf(i18n('pOverview_alias_domain_aliases'), domain) %]</td>
+               <td>[% i18n('pOverview_alias_domain_modified') %]</td>
+               <td>[% i18n('pOverview_alias_domain_active') %]</td>
+               <td>&nbsp;</td>
+            </tr>
+            [% FOREACH adom IN aliasdomains %]
+               [% WRAPPER tr_highlight %]
+                  <td><a href="[% urlfor('', domain=adom.alias_domain, limit=current_limit) %]">[% adom.alias_domain %]</a></td>
+                  <td>[% adom.modified %]</td>
+                  [%# TODO: change all edit scripts not to require the domain parameter (and extract it from the address). This avoids superflous problems when using search. %]
+
+                  [%# TODO puke %]
+                  <td><a href="[% urlfor('aliasdomain-edit-active', alias_domain=true, domain=adom.alias_domain, return=returnto) %]">[% adom.active ? i18n('YES') : i18n('NO') %]</a></td>
+                  <td><a href="[% urlfor('alias-domain-delete', domain=adom.alias_domain) %]" onclick="return confirm('[% i18n('confirm') _ i18n('pOverview_get_alias_domains') _ ": " _ adom.alias_domain %]')">[% i17n('del') %]</a></td>
+               [% END %]
+            [% END %]
+         [% END %]
+
+         [% IF targetdomain %]
+            <tr class="header">
+               <td>[% sprintf(i18n('pOverview_alias_domain_target'), $domain) %]</td>
+               <td>[% i18n('pOverview_alias_domain_modified') %]</td>
+               <td>[% i18n('pOverview_alias_domain_active') %]</td>
+               <td>&nbsp;</td>
+            </tr>
+            [% WRAPPER tr_highlight %]
+               <td><a href="[% urlfor("virtual-list", domain=targetDomain.target_domain, limit=current_limit) %]">[% targetDomain.target_domain %]</a></td>
+               <td>[% targetDomain.modified %]</td>
+               <td><a href="[% urlfor('aliasdomain-edit-active', alias_domain=true, domain=domain, return=returnto) %]">[% targetDomain.active ? i18n('YES') : i18n('NO') %]</a></td>
+               <td><a href="[% urlfor('aliasdomain-delete', domain=domain) %]" onclick="return confirm ('i[% i18n('confirm') _ i18n('pOverview_get_alias_domains') _ ": " _ domain %]')">[% i18n('del') %]</a></td>
+            [% END %]
+         [% END %]
+      </table>
+   [% END %]
+   [% IF targetdomain %]
+      [%# TODO: don't print create link if no domains are left for aliasing %]
+      <p><a href="[% urlfor('aliasdomain-create', target_domain=domain) %]">[% i18n('pMenu_create_alias_domain') %]</a></p>
+   [% END %]
+[% END %]
+
+[% IF alias.length %]
+   <table id="alias_table">
+      <tr>
+         <td colspan="7"><h3>[% i18n('pOverview_alias_title') %]</h3></td>
+      </tr>
+      <tr class="header">
+         [% IF conf.show_status %]
+            <td></td>
+         [% END %]
+         <td>[% i18n('pOverview_alias_address') %]</td>
+         <td>[% i18n('pOverview_alias_goto') %]</td>
+         <td>[% i18n('pOverview_alias_modified') %]</td>
+         <td>[% i18n('pOverview_alias_active') %]</td>
+         <td colspan="2">&nbsp;</td>
+      </tr>
+      [% FOREACH a IN alias %]
+         [% alias_active = a.active ? i18n('YES') : i18n('NO') %]
+         [% WRAPPER tr_highlight %]
+            [% IF conf.show_status %]
+               <td>[unimplemented]</td> [%# gen_show_status(a.address) %]
+            [% END %]
+            <td>[% searchhl(a.address) %]</td>
+            <td>[% searchhl(a.goto.html) %]</td>
+            <td>[% a.modified %]</td>
+            [%# TODO: merge superadmin / domain admin code %]
+            [% IF c.auth_has_role('globaladmin') %]
+               [% returnto = urlfor('', domain=domain, limit=current_limit) %]
+               <td><a href="[% urlfor('toggleactive', alias=a.address, domain=domain, return=returnto) %]">[% alias_active %]</a></td>
+               <td><a href="[% urlfor('alias-edit', address=a.address) %]">[% i18n('edit') %]</a></td>
+               <td><a href="[% urlfor('alias-delete', alias=a.address, domain=domain) %]" onclick="return confirm('[% i18n('confirm') _ i18n('pOverview_get_aliases') _ ": " _ $a.address %]')">[% i18n('del') %]</a></td>
+            [% ELSE %][%# not globaladmin %]
+               [% IF conf.special_alias_control %]
+                  <td><a href="[% urlfor('toggleactive', alias=a.address, domain=domain) %]">[% alias_active %]</a></td>
+                  <td><a href="[% urlfor('alias-edit', address=a.address) %]">[% i18n('edit') %]</a></td>
+                  <td><a href="[% urlfor('alias-delete', delete=a.address, domain=$domain) %]" onclick="return confirm('[% i18n('confirm') _ i18n('pOverview_get_aliases') _ ": " _ a.address %]">[% i18n('del') %]</a></td>
+               [% ELSE %][%# not special_alias_control %]
+                  [% IF not conf.default_aliases.keys.grep('^' _ a.address).size %]  
+                     <td><a href="[% urlfor('toggleactive', alias=a.address, domain=domain) %]">[% alias_active %]</a></td>
+                     <td><a href="[% urlfor('alias-edit', address=a.address) %]">[% i18n('edit') %]</a></td>
+                     <td><a href="[% urlfor('alias-delete', alias=a.address, domain=domain) %]" onclick="return confirm('[% i18n('confirm') _ i18n('pOverview_get_aliases') _ ": " _ a.address %]')">[% i18n('del') %]</a></td>
+                  [% ELSE %]
+                     [%# this is a special alias, show status only, don't allow changes %]
+                     <td>[% alias_active %]</td>
+                     <td>&nbsp;</td>
+                     <td>&nbsp;</td>
+                  [% END %]
+               [% END %][%# IF conf.special_alias_control %]
+            [% END %][%# IF c.auth_has_role('globaladmin') %]
+         [% END %][%# WRAPPER tr_highlight %]
+      [% END %][%# FOREACH a IN alias %]
+   </table>
+[% END %][%# IF alias.length %]
+
+[% IF can_add_alias %]
+   <p><a href="[% urlfor('alias-create', domain=domain) %]">[% i18n('pMenu_create_alias') %]</a></p>
+[% END %]
+
+[% IF mailbox.size %]
+   <div id="nav_bar"><a name="MidArrow"></a>
+   <table width=730>
+      <colgroup span="1">
+         <col width="550"></col>
+      </colgroup>
+      <tr>
+         <td align=left>
+         [% IF limit.mbox_pgindex_count -%]
+            <b>[% i18n('pOverview_mailbox_title') %]</b>&nbsp;&nbsp;
+         [%- END %]
+         [%- highlight_at = display_back_show == 1 ? display_back / (conf.page_size + 1) : 0 -%]
+         [%- FOREACH i IN [ 0 .. limit.mbox_pgindex_count ];
+            link_limit = i * conf.page_size -%]
+            <a href="[% urlfor('', domain=domain, limit=link_limit) _ '#MidArrow' %]">
+            [%- IF i == highlight_at -%]
+               <b>[% limit.mbox_pgindex.$i %]</b>
+            [%- ELSE -%]
+               [% limit.mbox_pgindex.$i %]
+            [%- END -%]
+         [%- END -%]
+         </td>
+         <td valign="middle" align="right">
+            [% show_back_up_next %]
+         </td>
+      </tr>
+   </table>
+   </div>
+
+   [% colspan = 8;
+      IF conf.vacation_control_admin; colspan = colspan + 1; END;
+      IF conf.alias_control_admin;    colspan = colspan + 1; END;
+      IF display_mailbox_aliases;     colspan = colspan + 1; END
+   %]
+   <table id="mailbox_table">
+      <tr>
+         <td colspan="[% colspan %]"><h3>[% i18n('pOverview_mailbox_title') %]</h3></td>
+      </tr>
+      <tr class="header">
+         [% IF conf.show_status %]
+            <td></td>
+         [% END %]
+         <td>[% i18n('pOverview_mailbox_username') %]</td>
+         [% IF display_mailbox_aliases %]
+            <td>[% i18n('pOverview_alias_goto') %]</td>
+         [% END %]
+         <td>[% i18n('pOverview_mailbox_name') %]</td>
+         [% IF conf.quota %]
+            <td>[% i18n('pOverview_mailbox_quota') %]</td>
+         [% END %]
+         <td>[% i18n('pOverview_mailbox_modified') %]</td>
+         <td>[% i18n('pOverview_mailbox_active') %]</td>
+         [% colspan = colspan - 6 %]
+         <td colspan="[% colspan %]">&nbsp;</td>
+      </tr>
+      [% FOREACH mbox in mailbox %]
+         [% tr_highlight %]
+            [% IF conf.show_status %]
+               <td>[unimplemented]</td>i<!-- gen_show_status(mbox.username) -->
+            [% END %]
+            <td>[% searchhl(mbox.username) %]</td>
+            [% IF display_mailbox_aliases %]
+               <td>[% searchhl(mbox.goto) %]</td>
+               <td>[% mbox.goto_mailbox ? 'Mailbox' : 'Forward only' %]
+               [% IF mbox.goto_other.size %]<br />[% END %]
+               [% t = mbox.goto_other.join('<br />'); searchhl(t) %]
+            </td>
+            [% END %]
+            <td>[% mbox.name %]</td>
+            [% IF conf.quota %]
+               <td>
+                  [% IF mbox.quota <  0; i18n('pOverview_disabled');
+                  ELSIF mbox.quota == 0; i18n('pOverview_unlimited');
+                  ELSE; IF conf.used_quotas;
+                           rounded = (mbox.current / conf.quota_multiplier) + 0.005;
+                           h.sprintf("%.2d/", rounded);
+                        END;
+                        rounded = (mbox.quota / conf.quota_multiplier) + 0.005;
+                        h.sprintf("%.2d", rounded);
+                  END %]
+               </td>
+            [% END %]
+            <td>[% mbox.modified %]</td>
+            <td><a href="[% urlfor('toggleactive', username=mbox.username, domain=domain) %]">[% mbox.active ? i18n('YES') : i18n('NO') %]</a></td>
+            [% IF conf.vacation_control_admin and conf.vacation %]
+               [% IF mbox.v_active == -1 %]
+                  <td>&nbsp;</td>
+               [% ELSE %]
+                  <td><a href="[% urlfor('vacation-edit', username=mbox.username, domain=domain) %]">[% mbox.v_active == 1 ? i18n('pOverview_vacation_edit') : i18n('pOverview_vacation_option') %]</a></td>
+            [% END %]
+            [% IF (not c.auth_has_role('globaladmin') and conf.alias_control_admin) or
+                  (    c.auth_has_role('globaladmin') and conf.alias_control) %]
+               <td><a href="[% urlfor('alias-edit', address=mbox.username) %]">[% i18n('pOverview_alias_edit') %]</a></td>
+            [% END %]
+            <td><a href="[% urlfor('mailbox-edit', username=mbox.username, domain=domain) %]">[% i18n('edit') %]</a></td>
+            <td><a href="[% urlfor('mailbox-delete', mailbox=mbox.username, domain=domain) %]" onclick="return confirm([% i18n('confirm') _ i18n('pOverview_get_mailboxes') _ ': ' _ mbox.usernamei %])">[% i18n('del') %]</a></td>                                                                                         
+         [% END %][%# tr_highlight %]
+      [% END %]
+   </table>
+
+   <div id="nav_bar"><a name="LowArrow">
+   [% show_back_up_next('LowArrow') %]
+   </div>
+[% END %]
+
+[% IF can_add_mailbox %]
+   <p><a href="[% urlfor('mailbox-create', domain=domain) %]">[% i18n('pMenu_create_mailbox') %]</a></p>
+[% END %]
+
+[% IF conf.show_status and conf.show_status_key %]
+   <br /></br />
+   [% IF conf.show_undeliverable %]
+      &nbsp;<span style="background-color:[% conf.show_undeliverable_color %]">[% conf.show_status_text %]</span>=[% i18n('pStatus_undeliverable') %]
+   [% END %]
+   [% IF conf.show_popimap %]
+      &nbsp;<span style="background-color:[% conf.show_popimap_color %]">[% conf.show_status_text %]</span>=[% i18n('pStatus_popimap') %]
+   [% END %]
+   [% FOREACH i in [ 0 .. conf.show_custom_domains.size ] %]
+      &nbsp;<span style="background-color:[% conf.show_custom_colors.$i %]">[% conf.show_status_text %]</span>=[% i18n('pStatus_custom') _ conf.show_custom_domains.$i %]
+   [% END %]
+[% END %]
+

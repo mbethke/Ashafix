@@ -1,0 +1,65 @@
+[% INCLUDE 'menu.tt' %]
+<div id="edit_form">
+<form name="create_domain" method="post">
+<table>
+    <tr>
+        <td colspan="3"><h3>[% i18n('pAdminCreate_domain_welcome') %]</h3></td>
+    </tr>
+    <tr>
+        <td>[% i18n('pAdminCreate_domain_domain') _ ":" %]</td>
+        <td><input class="flat" type="text" name="domain" value="[% domain %]" /></td>
+        <td>[% pAdminCreate_domain_domain_text %]</td>
+    </tr>
+    <tr>
+        <td>[% i18n('pAdminCreate_domain_description') _ ":" %]</td>
+        <td><input class="flat" type="text" name="description" value="[% description %]" /></td>
+        <td>&nbsp;</td>
+    </tr>
+    <tr>
+        <td>[% i18n('pAdminCreate_domain_aliases') _ ':' %]</td>
+        <td><input class="flat" type="text" name="aliases" value="[% aliases %]" /></td>
+        <td>[% i18n('pAdminCreate_domain_aliases_text') %]</td>
+    </tr>
+    <tr>
+        <td>[% i18n('pAdminCreate_domain_mailboxes') _ ':' %]</td>
+        <td><input class="flat" type="text" name="mailboxes" value="[% mailboxes %]" /></td>
+        <td>[% i18n('pAdminCreate_domain_mailboxes_text') %]</td>
+    </tr>
+    [% IF conf.quota %]
+        <tr>
+            <td>[% i18n('pAdminCreate_domain_maxquota') _ ':' %]</td>
+            <td><input class="flat" type="text" name="maxquota" value="[% maxquota %]" /></td>
+            <td>[% i18n('pAdminCreate_domain_maxquota_text') %]</td>
+        </tr>
+    [% END %]
+    [% IF conf.transport %]
+        <tr>
+            <td>[% i18n('pAdminCreate_domain_transport') _ ':' %]</td>
+            <td><select class="flat" name="transport">
+            [% FOREACH opt IN conf.transport_options %]
+                <option value="[% opt %]"[% opt == transport ? ' selected="selected"' : '' %]>[% opt %]</option>
+            [% END %]
+           </select>
+           </td>
+           <td>[% i18n('pAdminCreate_domain_transport_text') %]</td>
+        </tr>
+    [% END %]
+    <tr>
+        <td>[% i18n('pAdminCreate_domain_defaultaliases') _ ':' %]</td>
+        <td><input class="flat" type="checkbox" value='on' name="defaultaliases"[% defaultaliases == 'on' ? ' checked="checked"' : '' %] /></td>
+        <td>[% i18n('pAdminCreate_domain_defaultaliases_text') %]</td>
+    </tr>
+    <tr>
+        <td>[% i18n('pAdminCreate_domain_backupmx') _ ':' %]</td>
+        <td><input class="flat" type="checkbox" value='on' name="backupmx"[% backupmx == 'on' ? ' checked="checked"' : '' %]/></td>
+      <td>&nbsp;</td>
+   </tr>
+   <tr>
+      <td colspan="3" class="hlp_center"><input class="button" type="submit" name="submit" value="[% i18n('pAdminCreate_domain_button') %]" /></td>
+   </tr>
+   <tr>
+      <td colspan="3" class="standout">[% message %]</td>
+   </tr>
+</table>
+</form>
+</div>

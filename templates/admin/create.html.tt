@@ -1,0 +1,42 @@
+[% INCLUDE 'menu.tt' %]
+<div id="edit_form">
+<form name="create_admin" method="post">
+<table>
+   <tr>
+      <td colspan="3"><h3>[% i18n('pAdminCreate_admin_welcome') %]</h3></td>
+   </tr>
+   <tr>
+      <td>[% i18n('pAdminCreate_admin_username') _ ":" %]</td>
+      <td><input class="flat" type="text" name="fUsername" value="[% tUsername %]" /></td>
+      <td> [% pAdminCreate_admin_username_text %] </td>
+   </tr>
+   <tr>
+      <td>[% i18n('pAdminCreate_admin_password') _ ":" %]</td>
+      <td><input class="flat" type="password" name="fPassword" /></td>
+      <td>[% pAdminCreate_admin_password_text %]</td>
+   </tr>
+   <tr>
+      <td>[% i18n('pAdminCreate_admin_password2') _ ":" %]</td>
+      <td><input class="flat" type="password" name="fPassword2" /></td>
+      <td>&nbsp;</td>
+   </tr>
+   <tr>
+      <td>[% i18n('pAdminCreate_admin_address') _ ":" %]</td>
+      <td>
+         <select name="fDomains" size="10" multiple="multiple">
+            [% FOREACH dom IN domains %]
+               <option value="[% dom %]" [% tDomains.in_list(dom) ? 'selected' : '' %]>[% dom %]</option>
+            [% END %]
+         </select>
+      </td>
+      <td>&nbsp;</td>
+   </tr>
+   <tr>
+      <td colspan="3" class="hlp_center"><input class="button" type="submit" name="submit" value="[% i18n('pAdminCreate_admin_button') %]" /></td>
+   </tr>
+   <tr>
+      <td colspan="3" class="standout">[% tMessage %]</td>
+   </tr>
+</table>
+</form>
+</div>
