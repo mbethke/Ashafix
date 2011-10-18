@@ -50,18 +50,10 @@ search results %]
 [% END %]
 
 
-
-
 [% returnto = urlfor('virtual-list', domain=domain, limit=current_limit) %]
 
 <div id="overview">
 <form name="overview" method="get">
-
-[% FOREACH elem IN [ 'aliases', 'mailboxes', 'maxquota' ];
-   IF    limit.$elem <  0; i18n('pOverview_disabled');
-   ELSIF limit.$elem == 0; i18n('pOverview_unlimited');
-   ELSE; limit.$elem;
-END %]
 
 <select name="domain" onChange="this.form.submit();">
 [% FOREACH dom IN domains %]

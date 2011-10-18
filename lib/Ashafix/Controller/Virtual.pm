@@ -81,7 +81,7 @@ sub list {
         offset  => $display,
         limit   => $page_size,
         domains => [ @allowed_domains ],
-    );
+    )->hashes;
 
     my $display_mailbox_aliases = $self->cfg('alias_control_admin');
     @mailboxes = $self->model('complex')->get_mailboxes(
@@ -95,7 +95,7 @@ sub list {
                 vacation_control_admin used_quotas new_quota_table /
             },
 
-    );
+    )->hashes;
     if($display_mailbox_aliases) {
         foreach my $mbox (@mailboxes) {
             $mbox->{goto_mailbox} = 0;
@@ -140,19 +140,20 @@ sub list {
         $display_next_show = 1;
         $display_next = $display + $page_size;
     }
-    $can_add_alias   = (0 == $limit->{aliases} or $limit->{alias_count}   < $limit->{aliases});
-    $can_add_mailbox = (0 == $limit->{mailbox} or $limit->{mailbox_count} < $limit->{mailboxes});
+    $can_add_alias   = (0 == $limit->{aliases}   or $limit->{alias_count}   < $limit->{aliases});
+    $can_add_mailbox = (0 == $limit->{mailboxes} or $limit->{mailbox_count} < $limit->{mailboxes});
 
     if(0 == $limit->{mailboxes}) {
         $limit->{$_} = $self->eval_size($limit->{$_}) foreach(qw/ aliases mailboxes maxquota /);
     }
 
     foreach my $alias (@aliases) {
+        print "ALIAS: ", Dumper($alias);
         push @gen_show_status, AliasStatus->new($self, $alias->{address});
         push @is_alias_owner, $self->check_alias_owner($self->auth_get_username, $alias->{address});
     }
 
-    foreach my $i ($#mailboxes) {
+    foreach my $i (0 .. $#mailboxes) {
         my $mbox = $mailboxes[$i];
         $gen_show_status_mailbox[$i] = AliasStatus->new($self, $mbox->{username});
         $divide_quota{$_}[$i] = $self->divide_quota($mbox->{$_}) foreach(qw/ current quota /);
@@ -223,6 +224,8 @@ sub new
 {
     my ($class, $ctrl, $alias) = @_;
 
+    print $class,"->new(`$ctrl', `$alias')\n";
+
     unless($sstxt) {
         # Initialize package globals
         $sstxt = $ctrl->cfg('show_status_text');
@@ -232,7 +235,7 @@ sub new
 
     my $self = bless {
         alias           => $alias,
-        destinations    => [ split /,/, $ctrl->model('alias')->get_goto_by_address($alias)->flat ],
+        destinations    => [ map { split /,/ } $ctrl->model('alias')->get_goto_by_address($alias)->flat ],
         deliverable     => $STATUS_NORMAL,
         popimap         => $STATUS_NORMAL,
         custom_domain   => '',
@@ -252,6 +255,7 @@ sub _check_deliverable {
     # Check for undeliverable alias destination
     DELIVERABLE:
     foreach my $goto (@{$self->{destinations}}) {
+        say "DELIVERABLE: $goto\n";
         my ($catchall) = $goto =~ /(\@.*)/;
         my $addr;
 
