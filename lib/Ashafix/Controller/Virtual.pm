@@ -14,6 +14,7 @@ package Ashafix::Controller::Virtual;
 #      CREATED:  09/11/2011 12:49:11 AM
 #     REVISION:  ---
 #===============================================================================
+use 5.010;
 use feature qw/switch/;
 use Mojo::Base 'Ashafix::Controller';
 use List::Util qw/first/;
@@ -35,7 +36,9 @@ sub list {
     my $self = shift;
     my $user = $self->auth_get_username;
     my (@allowed_domains, @aliases, @alias_domains, @mailboxes);
-    my ($target_domain, $is_globaladmin);
+    my (@gen_show_status, @is_alias_owner, @gen_show_status_mailbox);
+    my %divide_quota;
+    my ($target_domain, $is_globaladmin, $can_create_alias_domain);
     my $page_size = $self->cfg('page_size');
 
     # Get all domains for this admin
@@ -58,7 +61,7 @@ sub list {
     my $display = int($self->param('limit')  // 0);
     my $search  =     $self->param('search');
 
-    unless(first { $_ eq $domain } @allowed_domains) {
+    unless(any { $_ eq $domain } @allowed_domains) {
         # Domain parameter not in list of allowed domains
         $self->flash(error => $self->l('invalid_parameter'));
         return $self->redirect_to('domain-list');
@@ -67,12 +70,9 @@ sub list {
     $self->session(list_virtual_sticky_domain => $domain);
 
     if($self->cfg('alias_domain')) {
-        # First try to get a list of other domains pointing to this currently
-        # chosen one (AKA alias domains)
-        @alias_domains = $self->model('aliasdomain')->select_by_target($domain, $display, $page_size)->hashes;
-
-        # Now let's see if the current domain itself is an alias for another domain
-        $target_domain = $self->model('aliasdomain')->select_by_alias($domain)->hash;
+        @alias_domains = $self->model('aliasdomain')->select_by_domain($domain, $display, $page_size)->hashes;
+        $can_create_alias_domain = none { $_->{target_domain} eq $domain } @alias_domains;
+        # TODO: set $can_create_alias_domain = 0; if all domains (of this admin) are already used as alias domains
     }
 
     @aliases = $self->model('complex')->get_addresses_by_domain(
@@ -96,6 +96,29 @@ sub list {
             },
 
     );
+    if($display_mailbox_aliases) {
+        foreach my $mbox (@mailboxes) {
+            $mbox->{goto_mailbox} = 0;
+            foreach my $goto (split /,/, $mbox->{goto}) {
+                state $vacation = $self->cfg('vacation');
+                state $vacation_domain = $self->cfg('vacation_domain');
+                state $rec_delim = $self->cfg('recipient_delimiter');
+
+                my $goto_noext = $goto;
+                $rec_delim and $goto_noext =~ s/$rec_delim[^$rec_delim\@]*@/\@/o;
+                if(any { $_ eq $mbox->{username} } $goto, $goto_noext) {
+                    # delivers to mailbox
+                    $mbox->{goto_mailbox} = 1;
+                } elsif($vacation and index $goto_noext, "\@$vacation_domain") {
+                    # vacation alias - TODO check for full vacation alias
+                    # skip the vacation alias, vacation status is detected otherwise
+                } else {
+                    # forwarding to other alias
+                    push @{$mbox->{goto_other}}, $goto; 
+                }
+            }
+        }
+    }
 
     # TODO simplify. The _show variables are superfluous
     my ($can_add_alias, $can_add_mailbox,
@@ -119,46 +142,32 @@ sub list {
     }
     $can_add_alias   = (0 == $limit->{aliases} or $limit->{alias_count}   < $limit->{aliases});
     $can_add_mailbox = (0 == $limit->{mailbox} or $limit->{mailbox_count} < $limit->{mailboxes})
-    if($limit['mailboxes'] == 0) {
 
-    $limit ['aliases']    = eval_size ($limit ['aliases']);
-    $limit ['mailboxes']    = eval_size ($limit ['mailboxes']);
-    $limit ['maxquota']    = eval_size ($limit ['maxquota']);
-}
-
-$gen_show_status = array ();
-$check_alias_owner = array ();
-
-if ((is_array ($tAlias) and sizeof ($tAlias) > 0))
-    for ($i = 0; $i < sizeof ($tAlias); $i++) {
-        $gen_show_status [$i] = gen_show_status($tAlias[$i]['address']);
-        $check_alias_owner [$i] = check_alias_owner($SESSID_USERNAME, $tAlias[$i]['address']);
+    if($limit{mailboxes} == 0) {
+        $limit{$_} = $self->eval_size($limit{$_}) foreach(qw/ aliases mailboxes maxquota /);
     }
 
-$gen_show_status_mailbox = array ();
-$divide_quota = array ('current' => array(), 'quota' => array());
-if ((is_array ($tMailbox) and sizeof ($tMailbox) > 0))
-    for ($i = 0; $i < sizeof ($tMailbox); $i++) {
-        $gen_show_status_mailbox [$i] = gen_show_status($tMailbox[$i]['username']);
-        if(isset($tMailbox[$i]['current'])) {
-            $divide_quota ['current'][$i] = divide_quota ($tMailbox[$i]['current']);
-        }
-        if(isset($tMailbox[$i]['quota'])) {
-            $divide_quota ['quota'][$i] = divide_quota ($tMailbox[$i]['quota']);
-        }
-        if(isset($tMailbox[$i]['quota']) && isset($tMailbox[$i]['current']))
-        {
-          $divide_quota ['percent'][$i] = min(100, round(($divide_quota ['current'][$i]/max(1,$divide_quota ['quota'][$i]))*100));
-          $divide_quota ['quota_width'][$i] = ($divide_quota ['percent'][$i] / 100 * 120);
+    foreach my $alias (@aliases) {
+        push @gen_show_status, AliasStatus->new($self, $alias->{address});
+        push @is_alias_owner, $self->check_alias_owner($self->auth_get_username, $alias->{address});
+    }
+
+    foreach my $i ($#mailboxes) {
+        my $mbox = $mailboxes[$i];
+        $gen_show_status_mailbox[$i] = AliasStatus->new($self, $mbox->{username});
+        $divide_quota{$_}[$i] = $self->divide_quota($mbox->{$_}) foreach(qw/ current quota /);
+        if(defined $mbox->{current} and defined $mbox->{current}) {
+            $divide_quota{percent}[$i] = min(100, sprintf("%d", ($divide_quota{current}[$i] / max(1, $divide_quota{quota}[$i])) * 100));
+            $divide_quota{quota_width}[$i] = ($divide_quota{percent}[$i] * 1.2); # TODO redundant?
         }
     }
     
     $self->render(
-   domain           => $domain,
-   current_limit    => $page_size,
-   domains          => \@allowed_domains,
-   mailbox          => \@mailboxes,         # TODO should be called "mailboxes"
-   #hash     limit (keys: aliases, mailboxes, maxquota, alias_count, alias_pgindex_count, mailbox_count, mbox_pgindex_count)
+        domain           => $domain,
+        current_limit    => $page_size,
+        domains          => \@allowed_domains,
+        mailbox          => \@mailboxes,         # TODO should be called "mailboxes"
+#hash     limit (keys: aliases, mailboxes, maxquota, alias_count, alias_pgindex_count, mailbox_count, mbox_pgindex_count)
    #bool     can_add_alias
    #bool     can_add_mailbox
    #?        display_back_show
@@ -167,7 +176,37 @@ if ((is_array ($tMailbox) and sizeof ($tMailbox) > 0))
     );
 }
 
-# TODO use this
+sub eval_size {
+    my ($self, $size) = @_;
+
+    return $self->l('pOverview_unlimited') if $size == 0;
+    return $self->l('pOverview_disabled')  if $size < 0;
+    return $size;
+}
+
+sub check_alias_owner { 
+    my ($self, $username, $alias) = @_;
+
+    return 1 if $self->auth_has_role('globaladmin');
+
+    my ($localpart) = split /\@/, $alias;
+    return if(!$self->conf('special_alias_control') and exists $self->conf('default_aliases')->{$localpart});
+    return 1;
+}
+
+sub divide_quota {
+    my ($self, $quota) = @_;
+    state $mult = $self->conf('quota_multiplier');
+
+    return unless defined $quota;
+    return $quota if -1 == $quota;
+    return sprintf("%.2d", ($quota / $mult) + 0.05);
+}
+
+
+
+
+
 package AliasStatus;
 use strict;
 use warnings;
@@ -226,10 +265,11 @@ sub _check_deliverable {
         }
 
         unless($addr) {
+            state $vacation_domain = lc $self->{controller}->cfg('vacation_domain');
             # Address is not a known mailbox, check for vacation domain
             my $domain = lc substr $catchall, 1;
             my $vacdomain = lc $domain =~ /\@(.*)/;
-            if($vacdomain eq lc $self->{controller}->cfg('vacation_domain')) {
+            if($vacdomain eq $vacation_domain) {
                 $self->deliverable = $STATUS_NORMAL;
                 last DELIVERABLE;
             }

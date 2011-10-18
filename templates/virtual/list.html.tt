@@ -246,7 +246,7 @@ END %]
       [% FOREACH mbox in mailbox %]
          [% tr_highlight %]
             [% IF conf.show_status %]
-               <td>[unimplemented]</td>i<!-- gen_show_status(mbox.username) -->
+               <td>[unimplemented]</td><!-- gen_show_status(mbox.username) -->
             [% END %]
             <td>[% searchhl(mbox.username) %]</td>
             [% IF display_mailbox_aliases %]

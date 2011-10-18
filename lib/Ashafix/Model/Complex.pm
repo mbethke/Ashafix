@@ -47,11 +47,13 @@ our %snippets = (
     GROUP BY d.domain
     ORDER BY d.domain",
 
-    get_addresses_by_domain => "SELECT a.address,a.goto,a.modified,a.active
-    FROM %table_alias a
-    LEFT JOIN %table_mailbox m ON a.address=m.username
-    WHERE (%sql_domain AND m.maildir IS NULL %sql_where)
-    ORDER BY a.address LIMIT ? OFFSET ?",
+    get_addresses_by_domain => "SELECT address, goto, modified, active
+    FROM %table_alias
+    WHERE %sql_domain AND
+    NOT EXISTS(SELECT 1 FROM %table_mailbox WHERE username=%table_alias.address)
+    %sql_where
+    ORDER BY a.address
+    LIMIT ? OFFSET ?",
 
     getmb_mailbox   => " FROM %table_mailbox m",
     getmb_alias     => " LEFT JOIN %table_alias a ON m.username=a.address ",
