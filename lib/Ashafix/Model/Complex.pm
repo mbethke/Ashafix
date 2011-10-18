@@ -52,7 +52,7 @@ our %snippets = (
     WHERE %sql_domain AND
     NOT EXISTS(SELECT 1 FROM %table_mailbox WHERE username=%table_alias.address)
     %sql_where
-    ORDER BY a.address
+    ORDER BY address
     LIMIT ? OFFSET ?",
 
     getmb_mailbox   => " FROM %table_mailbox m",
@@ -99,7 +99,7 @@ sub get_addresses_by_domain {
         $sql_where  = "AND (address LIKE ? OR goto LIKE ?)";
         @params     = ( @{$args{domains}}, (("%${args{search}}%") x 2));
     } else {
-        $sql_domain = "a.domain=?";
+        $sql_domain = "domain=?";
         $sql_where  = '';
         @params     = $args{domain};
     }

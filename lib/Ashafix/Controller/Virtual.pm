@@ -17,8 +17,8 @@ package Ashafix::Controller::Virtual;
 use 5.010;
 use feature qw/switch/;
 use Mojo::Base 'Ashafix::Controller';
-use List::Util qw/first/;
-use List::MoreUtils qw/firstidx/;
+use List::Util qw/min max/;
+use List::MoreUtils qw/any none/;
 use Data::Dumper;
 
 sub create {
@@ -39,7 +39,7 @@ sub list {
     my (@gen_show_status, @is_alias_owner, @gen_show_status_mailbox);
     my %divide_quota;
     my ($target_domain, $is_globaladmin, $can_create_alias_domain);
-    my $page_size = $self->cfg('page_size');
+    state $page_size = $self->cfg('page_size');
 
     # Get all domains for this admin
     if($self->auth_has_role('globaladmin')) {
@@ -70,7 +70,7 @@ sub list {
     $self->session(list_virtual_sticky_domain => $domain);
 
     if($self->cfg('alias_domain')) {
-        @alias_domains = $self->model('aliasdomain')->select_by_domain($domain, $display, $page_size)->hashes;
+        @alias_domains = $self->model('aliasdomain')->select_by_domain($domain, $page_size, $display)->hashes;
         $can_create_alias_domain = none { $_->{target_domain} eq $domain } @alias_domains;
         # TODO: set $can_create_alias_domain = 0; if all domains (of this admin) are already used as alias domains
     }
@@ -126,7 +126,7 @@ sub list {
         $display_up_show,
         $display_next, $display_next_show);
 
-    my $limit = get_domain_properties($domain);
+    my $limit = $self->get_domain_properties($domain);
 
     if($display >= $page_size) {
         $display_back_show = 1;
@@ -141,10 +141,10 @@ sub list {
         $display_next = $display + $page_size;
     }
     $can_add_alias   = (0 == $limit->{aliases} or $limit->{alias_count}   < $limit->{aliases});
-    $can_add_mailbox = (0 == $limit->{mailbox} or $limit->{mailbox_count} < $limit->{mailboxes})
+    $can_add_mailbox = (0 == $limit->{mailbox} or $limit->{mailbox_count} < $limit->{mailboxes});
 
-    if($limit{mailboxes} == 0) {
-        $limit{$_} = $self->eval_size($limit{$_}) foreach(qw/ aliases mailboxes maxquota /);
+    if(0 == $limit->{mailboxes}) {
+        $limit->{$_} = $self->eval_size($limit->{$_}) foreach(qw/ aliases mailboxes maxquota /);
     }
 
     foreach my $alias (@aliases) {
@@ -190,13 +190,13 @@ sub check_alias_owner {
     return 1 if $self->auth_has_role('globaladmin');
 
     my ($localpart) = split /\@/, $alias;
-    return if(!$self->conf('special_alias_control') and exists $self->conf('default_aliases')->{$localpart});
+    return if(!$self->cfg('special_alias_control') and exists $self->cfg('default_aliases')->{$localpart});
     return 1;
 }
 
 sub divide_quota {
     my ($self, $quota) = @_;
-    state $mult = $self->conf('quota_multiplier');
+    state $mult = $self->cfg('quota_multiplier');
 
     return unless defined $quota;
     return $quota if -1 == $quota;
@@ -210,6 +210,7 @@ sub divide_quota {
 package AliasStatus;
 use strict;
 use warnings;
+use List::MoreUtils qw/any/;
 
 my $STATUS_NORMAL = 0;
 my $STATUS_HILITE = 1;
@@ -299,7 +300,7 @@ sub _check_popimap {
     sub { $_[0] };
 
     # If the address passed in appears in its own goto field, its POP/IMAP
-    $self->{popimap} = (first { $_ eq $self->{alias} } map { $stripdelim->($_) } @{$self->{dest}}) ?
+    $self->{popimap} = (any { $_ eq $self->{alias} } map { $stripdelim->($_) } @{$self->{dest}}) ?
     $STATUS_HILITE : $STATUS_NORMAL;
 }
 
@@ -310,7 +311,7 @@ sub _check_custom_dest {
 
     CDOMAIN:
     foreach my $cdom_ind ( 0 .. $#{$cdoms} ) {
-        if(first { /$cdoms->[$cdom_ind]$/ } @{$self->{dest}}) {
+        if(any { /$cdoms->[$cdom_ind]$/ } @{$self->{dest}}) {
             $self->{custom_domain} = $cdoms->[$cdom_ind];
             last CDOMAIN;
         }

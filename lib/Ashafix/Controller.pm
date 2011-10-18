@@ -107,7 +107,7 @@ sub get_domain_properties {
     %props = (
         alias_count   => $self->model('alias')->count_domain_aliases($domain)->flat,
         mailbox_count => $self->model('mailbox')->count_domain_mailboxes($domain)->flat,
-        quota_sum     => $self->model('mailbox')->quota_sum($domain)->flat,
+        quota_sum     => $self->model('mailbox')->get_domain_quota($domain)->flat,
         map { $_ => $res->{$_} } qw/ description aliases mailboxes maxquota quota transport backupmx created modified active /
         # TODO if ($CONF['database_type'] == "pgsql") {
         # $list['active']=('t'==$row['active']) ? 1 : 0;
