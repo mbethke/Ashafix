@@ -8,3 +8,4 @@
 - Remove silly distinction between PHP->Form and Form->PHP variable names f* and t*
 - Decide whether to use whitespace-chomping TT tags (source looks better, more work)
   or aggressively chomp using TT options (smaller)
+- Refactor the whole mess to smaller testable units

@@ -19,7 +19,7 @@ use feature qw/switch/;
 use Mojo::Base 'Ashafix::Controller';
 use List::Util qw/min max/;
 use List::MoreUtils qw/any none/;
-use Data::Dumper;
+use Local::AliasStatus;
 
 sub create {
     my $self = shift;
@@ -36,9 +36,8 @@ sub list {
     my $self = shift;
     my $user = $self->auth_get_username;
     my (@allowed_domains, @aliases, @alias_domains, @mailboxes);
-    my (@gen_show_status, @is_alias_owner, @gen_show_status_mailbox);
     my %divide_quota;
-    my ($target_domain, $is_globaladmin, $can_create_alias_domain);
+    my ($is_globaladmin, $can_create_alias_domain);
     state $page_size = $self->cfg('page_size');
 
     # Get all domains for this admin
@@ -83,7 +82,6 @@ sub list {
         domains => [ @allowed_domains ],
     )->hashes;
 
-    my $display_mailbox_aliases = $self->cfg('alias_control_admin');
     @mailboxes = $self->model('complex')->get_mailboxes(
             search  => $search,
             domain  => $domain,
@@ -91,12 +89,11 @@ sub list {
             limit   => $page_size,
             cfg     => {
                 map { ($_ => $self->cfg($_)) }
-                qw/ display_mailbox_aliases display_mailbox_aliases
-                vacation_control_admin used_quotas new_quota_table /
+                qw/ alias_control_admin vacation_control_admin used_quotas new_quota_table /
             },
 
     )->hashes;
-    if($display_mailbox_aliases) {
+    if($self->cfg('alias_control_admin')) {
         foreach my $mbox (@mailboxes) {
             $mbox->{goto_mailbox} = 0;
             foreach my $goto (split /,/, $mbox->{goto}) {
@@ -148,32 +145,43 @@ sub list {
     }
 
     foreach my $alias (@aliases) {
-        print "ALIAS: ", Dumper($alias);
-        push @gen_show_status, AliasStatus->new($self, $alias->{address});
-        push @is_alias_owner, $self->check_alias_owner($self->auth_get_username, $alias->{address});
+        $alias->{gen_status}    = Local::AliasStatus->new($self, $alias->{address});
+        $alias->{user_is_owner} = $self->check_alias_owner($self->auth_get_username, $alias->{address});
     }
 
-    foreach my $i (0 .. $#mailboxes) {
-        my $mbox = $mailboxes[$i];
-        $gen_show_status_mailbox[$i] = AliasStatus->new($self, $mbox->{username});
-        $divide_quota{$_}[$i] = $self->divide_quota($mbox->{$_}) foreach(qw/ current quota /);
-        if(defined $mbox->{current} and defined $mbox->{current}) {
-            $divide_quota{percent}[$i] = min(100, sprintf("%d", ($divide_quota{current}[$i] / max(1, $divide_quota{quota}[$i])) * 100));
-            $divide_quota{quota_width}[$i] = ($divide_quota{percent}[$i] * 1.2); # TODO redundant?
+    foreach my $mbox (@mailboxes) {
+        $mbox->{gen_status} = Local::AliasStatus->new($self, $mbox->{username});
+        my $dq = $mbox->{divide_quota} = {};
+        $dq->{$_} = $self->divide_quota($mbox->{$_}) foreach(qw/ current quota /);
+        if(defined $mbox->{quota} and defined $mbox->{current}) {
+            $dq->{percent} = min( 100, int( (($dq->{current} / max(1, $dq->{quota})) * 100) + 0.5 ) );
+            $dq->{quota_width} = ($dq->{percent} * 1.2); # TODO redundant?
         }
     }
+    my %renderargs = (
+        domain              => $domain,
+        current_limit       => $page_size,
+        domains             => \@allowed_domains,
+        mailbox             => \@mailboxes,         # TODO should be called "mailboxes"
+        alias               => \@aliases,           # TODO should be called "aliases"
+        aliasdomains        => \@alias_domains,
+        limit               => $limit,
+        can_add_alias       => $can_add_alias,
+        can_add_mailbox     => $can_add_mailbox,
+        display_back        => $display_back,
+        display_back_show   => $display_back_show,
+        display_up_show     => $display_up_show,
+        display_next        => $display_next,
+        display_next_show   => $display_next_show,
+        search              => $search,
+        #int      highlight_at
+    );
+    foreach my $m (@{$renderargs{mailbox}}) {
+        foreach(sort keys %$m) { print "$_ => $m->{$_}\n" }
+        print "\n";
+    }
     
-    $self->render(
-        domain           => $domain,
-        current_limit    => $page_size,
-        domains          => \@allowed_domains,
-        mailbox          => \@mailboxes,         # TODO should be called "mailboxes"
-#hash     limit (keys: aliases, mailboxes, maxquota, alias_count, alias_pgindex_count, mailbox_count, mbox_pgindex_count)
-   #bool     can_add_alias
-   #bool     can_add_mailbox
-   #?        display_back_show
-   #?        display_back
-   #int      highlight_at
+    $self->render(%renderargs
     );
 }
 
@@ -202,179 +210,6 @@ sub divide_quota {
     return unless defined $quota;
     return $quota if -1 == $quota;
     return sprintf("%.2d", ($quota / $mult) + 0.05);
-}
-
-
-
-
-
-package AliasStatus;
-use strict;
-use warnings;
-use List::MoreUtils qw/any/;
-
-my $STATUS_NORMAL = 0;
-my $STATUS_HILITE = 1;
-
-my ($sstxt, $rec_delim, %colors);
-
-# Status object for aliases, currently only used to render colored bars in the
-# account overview
-sub new
-{
-    my ($class, $ctrl, $alias) = @_;
-
-    print $class,"->new(`$ctrl', `$alias')\n";
-
-    unless($sstxt) {
-        # Initialize package globals
-        $sstxt = $ctrl->cfg('show_status_text');
-        $colors{$_} = $ctrl->cfg("show_${_}_color") foreach(qw/ undeliverable popimap /);
-        $rec_delim = $ctrl->cfg('recipient_delimiter');
-    }
-
-    my $self = bless {
-        alias           => $alias,
-        destinations    => [ map { split /,/ } $ctrl->model('alias')->get_goto_by_address($alias)->flat ],
-        deliverable     => $STATUS_NORMAL,
-        popimap         => $STATUS_NORMAL,
-        custom_domain   => '',
-        controller      => $ctrl,
-    }, $class;
-
-    $ctrl->cfg('show_undeliverable') and $self->_check_deliverable;
-    $ctrl->cfg('show_popimap') and $self->_check_popimap;
-    @{$ctrl->cfg('show_custom_domains')} and $self->_check_custom_dest;
-
-    return $self;
-}
-
-sub _check_deliverable {
-    my $self = shift;
-
-    # Check for undeliverable alias destination
-    DELIVERABLE:
-    foreach my $goto (@{$self->{destinations}}) {
-        say "DELIVERABLE: $goto\n";
-        my ($catchall) = $goto =~ /(\@.*)/;
-        my $addr;
-
-        # This will misbehave if the delimiter is "0". Your fault for choosing such
-        # an inane delimiter, use "+" or something.
-        if($rec_delim) {
-            my $sans_delim;
-            ($sans_delim = $goto) =~ s/\Q$rec_delim\E[^\Q$rec_delim\E]*\@/@/;
-            $addr = $self->{controller}->model('alias')->get_address_3($goto, $catchall, $sans_delim)->flat;
-        } else {
-            $addr = $self->{controller}->model('alias')->get_address_2($goto, $catchall)->flat;
-        }
-
-        unless($addr) {
-            state $vacation_domain = lc $self->{controller}->cfg('vacation_domain');
-            # Address is not a known mailbox, check for vacation domain
-            my $domain = lc substr $catchall, 1;
-            my $vacdomain = lc $domain =~ /\@(.*)/;
-            if($vacdomain eq $vacation_domain) {
-                $self->deliverable = $STATUS_NORMAL;
-                last DELIVERABLE;
-            }
-            # Check for configured exceptions
-            foreach(@{$self->cfg('show_undeliverable_exceptions')}) {
-                if($domain eq lc $_) {
-                    $self->deliverable = $STATUS_NORMAL;
-                    last DELIVERABLE;
-                }
-            }
-            $self->{deliverable} = $STATUS_HILITE;
-            last DELIVERABLE;
-        }
-    }
-}
-
-sub _check_popimap {
-    my $self = shift;
-    my $sans_delim = '';
-
-    my $stripdelim = $rec_delim ?
-    sub {
-        my $s = shift;
-        $s =~ s/\Q$rec_delim\E[^\Q$rec_delim\E]*\@/@/;
-        ($s, $_[0])
-    } :
-    sub { $_[0] };
-
-    # If the address passed in appears in its own goto field, its POP/IMAP
-    $self->{popimap} = (any { $_ eq $self->{alias} } map { $stripdelim->($_) } @{$self->{dest}}) ?
-    $STATUS_HILITE : $STATUS_NORMAL;
-}
-
-sub _check_custom_dest {
-    my $self = shift;
-    my $dest = $self->{dest};
-    my $cdoms = $self->{controller}->cfg('show_custom_domains');
-
-    CDOMAIN:
-    foreach my $cdom_ind ( 0 .. $#{$cdoms} ) {
-        if(any { /$cdoms->[$cdom_ind]$/ } @{$self->{dest}}) {
-            $self->{custom_domain} = $cdoms->[$cdom_ind];
-            last CDOMAIN;
-        }
-    }
-}
-
-# Render to HTML
-sub html {
-    my $self = shift;
-    my $txt = $self->{txt};
-    my $cdoms = $self->{controller}->cfg('show_custom_domains');
-    my $ccols = $self->{controller}->cfg('show_custom_colors');
-    my $s = '';
-
-    foreach my $test ( [deliverable => 'undeliverable'], [popimap => 'popimap'] ) {
-        given($self->{$test->[0]}) {
-            when($STATUS_NORMAL) { $s .= "${txt}&nbsp;"; }
-            when($STATUS_HILITE) { $s .= _html_colorstatus($colors{$test->[1]}); }
-            default { die "BUG: invalid $test->[0] status `$self->{$test->[0]}'"; }
-        }
-    }
-
-    if($self->{custom_domain}) {
-        $s .= _html_colorstatus( $ccols->{firstidx { $_ eq $self->{custom_domain} } @$cdoms} );
-    } else {
-        $s .= "${txt}&nbsp;";
-    }
-
-    return $s;
-}
-
-# NOTE regular function!
-sub _html_colorstatus {
-    my $color = shift;
-    return "<span style=\"background-color:$color\">$sstxt</span>&nbsp;";
-}
-
-
-# TODO use this
-package AliasGotoAddress;
-use strict;
-use warnings;
-
-sub new {
-    my ($class, $gotostring, $limit, $more_tpl) = @_;
-    my $self = bless {
-        addrs => [ split /,/, $gotostring ],
-    };
-    if($limit) {
-        $self->{limit} = $limit;
-        $self->{more}  = sprintf($more_tpl, @{$self->{addrs}} - $limit);
-    }
-    return $self;
-}
-
-# Render to HTML
-sub html {
-    my $self =  shift; 
-    return join('<br>', @{$self->{addrs}}[0 .. $self->{limit} - 1]) . $self->{more};
 }
 
 1;
