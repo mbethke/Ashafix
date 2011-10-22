@@ -35,13 +35,8 @@
     [% IF conf.transport %]
         <tr>
             <td>[% i18n('pAdminCreate_domain_transport') _ ':' %]</td>
-            <td><select class="flat" name="transport">
-            [% FOREACH opt IN conf.transport_options %]
-                <option value="[% opt %]"[% opt == transport ? ' selected="selected"' : '' %]>[% opt %]</option>
-            [% END %]
-           </select>
-           </td>
-           <td>[% i18n('pAdminCreate_domain_transport_text') %]</td>
+            <td>[% gen_select('transport', conf.transport_options, transport, 'class="flat"') %]</td>
+            <td>[% i18n('pAdminCreate_domain_transport_text') %]</td>
         </tr>
     [% END %]
     <tr>

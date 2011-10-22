@@ -55,11 +55,7 @@ search results %]
 <div id="overview">
 <form name="overview" method="get">
 
-<select name="domain" onChange="this.form.submit();">
-[% FOREACH dom IN domains %]
-   <option value="[% dom %]"[% domain == dom ? ' selected="selected"' : '' %]>[% dom %]</option>
-[% END %]
-</select>
+[% gen_select('domain', domains, domain, 'onChange="this.form.submit();"') %]
 
 <input type="hidden" name="limit" value="0" />
 <input class="button" type="submit" name="go" value="[% i18n('pOverview_button') %]" />

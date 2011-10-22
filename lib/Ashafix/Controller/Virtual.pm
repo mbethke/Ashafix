@@ -41,13 +41,8 @@ sub list {
     state $page_size = $self->cfg('page_size');
 
     # Get all domains for this admin
-    if($self->auth_has_role('globaladmin')) {
-        $is_globaladmin = 1;
-        @allowed_domains = $self->model('domain')->get_real_domains->flat;
-    } else {
-        $is_globaladmin = 0;
-        $self->model('domain')->get_domains_for_admin($user)->flat;
-    }
+    @allowed_domains = $self->get_domains_for_user;
+    $is_globaladmin = $self->auth_has_role('globaladmin');
 
     unless(@allowed_domains) {
         $self->flash(error => $self->l(

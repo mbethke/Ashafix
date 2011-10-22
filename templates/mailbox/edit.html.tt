@@ -1,0 +1,75 @@
+<div id="edit_form">
+<form name="mailbox" method="post" action="">
+<table>
+	<tr>
+		<th colspan="4">
+			[% mode == 'edit' ? i18n('pEdit_mailbox_welcome') : i18n('pCreate_mailbox_welcome') %]
+        </th>
+	</tr>
+	<tr>
+		<td class="label"><label>[% i18n('pEdit_mailbox_username') %]:</label></td>
+        [% IF mode == 'edit' %]
+		    <td><em>[% username %]</em></td>
+		    <td>&nbsp;</td>
+		    <td>&nbsp;</td>
+        [% ELSE %]
+		    <td><input class="flat" type="text" name="username" value="[% username %]"/></td>
+		    <td>@<select name="domain">[% "TODO" %]</select></td>
+		    <td class="error_msg">[% mailbox_username_error %]</td>
+        [% END %]
+	</tr>
+	<tr>
+		<td class="label"><label>[% i18n('pCreate_mailbox_password') %]:</label></td>
+		<td><input class="flat" type="password" name="password" /></td>
+		<td>[% i18n('pCreate_mailbox_password_text') %]</td>
+		<td class="error_msg">[% mailbox_password_error %]</td>
+	</tr>
+	<tr>
+		<td class="label"><label>[% i18n('pCreate_mailbox_password2') %]:</label></td>
+		<td><input class="flat" type="password" name="password2" /></td>
+		<td colspan="2">&nbsp;</td>
+	</tr>
+	<tr>
+		<td class="label"><label>[% i18n('pEdit_mailbox_name') %]:</label></td>
+		<td><input class="flat" type="text" name="name" value="[% name %]" /></td>
+		<td>[% i18n('pCreate_mailbox_name_text') %]</td>
+		<td>&nbsp;</td>
+	</tr>
+    [% IF conf.quota %]
+	    <tr>
+	    	<td class="label"><label>[% i18n('pEdit_mailbox_quota') %]
+                [% IF $mode == 'edit' %] (max: [% $tMaxquota %])[% END %]:</label>
+            </td>
+            [%# TODO: show available quota in create; better place to show available quota? %]
+	    	<td><input class="flat" type="text" name="quota" value="[% $quota %]" /></td>
+	    	<td>[% i18n('pEdit_mailbox_quota_text') %]</td>
+	    	<td class="error_msg">[% $mailbox_quota_error %]</td>
+	    </tr>
+    [% END %]
+	<tr>
+		<td class="label"><label>[% i18n('pCreate_mailbox_active') %]:</label></td>
+		<td><input class="flat" type="checkbox" name="active"[% $active %]/></td>
+		<td colspan="2">&nbsp;</td>
+	</tr>
+    [% IF $mode == 'create' %]
+	    <tr>
+	    	<td class="label"><label>[% i18n('pCreate_mailbox_mail') %]:</label></td>
+	    	<td><input class="flat" type="checkbox" name="welcome_mail" checked="checked" /></td>
+	    	<td colspan="2">&nbsp;</td>
+	    </tr>
+    [% END %]
+	<tr>
+   	<td>&nbsp;</td>
+		<td colspan="3">
+            [% IF $mode == 'edit' %]
+			    <input class="button" type="submit" name="submit" value="[% i18n('save') %]" />
+			    <input class="button" type="submit" name="cancel" value="[% i18n('exit') %]" />
+            [% ELSE %]
+			    <input class="button" type="submit" name="submit" value="[% i18n('pCreate_mailbox_button') %]" />
+            [% END %]
+		</td>
+	</tr>
+</table>
+</form>
+</div>
+

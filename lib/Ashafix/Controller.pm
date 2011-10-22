@@ -120,4 +120,9 @@ sub get_domain_properties {
     return \%props;
 }
 
+sub get_domains_for_user {
+    my $self = shift;
+    $self->auth_has_role('globaladmin') and return $self->model('domain')->get_real_domains->flat;
+    return $self->model('domain')->get_domains_for_admin($self->auth_get_username)->flat;
+}
 1;

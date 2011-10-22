@@ -8,14 +8,29 @@
 %]
 [%# Global macro definitions %]
 [% USE url %]
-[% MACRO urlfor(base, args) GET url(c.url_for(base), args) %]
-[% MACRO i18n(key) GET h.l(key) %]
-[% BLOCK tr_highlight -%]
-<tr class="hilightoff" onMouseOver="className='hilighton';" onMouseOut="className='hilightoff';">
-[% content %]
-</tr>
-[% END -%]
 
+[%- # Construct a URL from a base and a list of GET parameters
+MACRO urlfor(base, args) GET url(c.url_for(base), args) -%]
+
+[%- # Shortcut: get a localized string
+MACRO i18n(key) GET h.l(key) -%]
+
+[%- # Shortcut, used several times in tables
+   # TODO move to virtual/list?
+BLOCK tr_highlight -%]
+<tr class="hilightoff" onMouseOver="className='hilighton';" onMouseOut="className='hilightoff';">
+[%- content- %]
+</tr>
+[%- END -%]
+
+[%- # Create a <select> list
+MACRO gen_select(name, options, active, selectattr) BLOCK -%]
+    <select name="[% name %]"[% selectattr.defined ? ' ' _ selectattr : '' %]>
+        [%- FOREACH o IN options %]
+            <option value="[% o %]"[% o == active ? ' selected="selected"' : '' %]>[% o %]</option>
+        [% END %]
+    </select>
+[%- END -%]
 
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
