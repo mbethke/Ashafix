@@ -1,220 +1,185 @@
 package Ashafix::Controller::Mailbox;
+#===============================================================================
+#
+#         FILE:  Mailbox.pm
+#
+#  DESCRIPTION:  Controller for operations on mailboxes
+#
+#         BUGS:  ---
+#        NOTES:  ---
+#       AUTHOR:  Matthias Bethke (mbethke), matthias@towiski.de
+#      COMPANY:  Zonarix S.A.
+#      VERSION:  1.0
+#      CREATED:  10/11/2011 10:40:11 AM
+#     REVISION:  ---
+#===============================================================================
+use 5.010;
+use strict;
+use warnings;
+use diagnostics;
 use Mojo::Base 'Ashafix::Controller';
+use List::MoreUtils qw/ any /;
+use MIME::Lite;
+
+sub delete {
+    my $self = shift;
+    die "unimplemented";
+}
 
 sub create {
     my $self = shift;
-    my $user = $self->auth_get_username;
+    my ($username, $domain, $pass1, $pass2, $name, $quota, $active, $send_mail);
+    my ($username_error, $password_error, $quota_error);
+
+    my $user    = $self->auth_get_username;
     my @domains = $self->get_domains_for_user;
 
-$create_mailbox_username_text_error = "";
-$create_mailbox_password_text_error = "";
-$create_mailbox_quota_text_error = "";
+    for($self->req->method) {
+        when('GET') {
+            $domain = $self->req->param('domain') // $domains[0];
+            # TODO localized error or something using $c->flash
+            print "D=`$domain' : [@domains]\n";
+            die "Invalid domain name selected, or you tried to select a domain you are not an admin for"
+                unless any { $_ eq $domain } @domains;
+            my $quota = $self->_allowed_quota($domain, 0);
+            # TODO check for remaining domain quota, reduce $tQuota if it is
+            # lower Note: this is dependent on the domain, which means to do it
+            # correct we'd have to remove the domain dropdown and hardcode the
+            # domain name from ?domain=... _allowed_quota() will provide the
+            # maximum allowed quota 
+            $active = 1;
+        }
+        when('POST') {
+            ($username, $domain, $pass1, $pass2, $name, $quota, $active, $send_mail) =
+            map { $self->param($_) // '' }
+            qw /username domain password password2 name quota active send_mail/;
+            $username = lc $username;
+            $domain   = lc $domain;
+            my $username_dom = "$username\@$domain";
 
-if ($_SERVER['REQUEST_METHOD'] == "GET")
-{
-   $fDomain = $list_domains[0];
-   if (isset ($_GET['domain'])) $fDomain = escape_string ($_GET['domain']);
+            $username_error = $self->l('pCreate_mailbox_username_text_error1')
+                unless(length $username and $self->check_domain_owner($username_dom, $domain) and
+                    $self->check_email_validity($username_dom));
 
-   if(!in_array($fDomain, $list_domains)) {
-      die("Invalid domain name selected, or you tried to select a domain you are not an admin for");
-   }
-   $tDomain = $fDomain;
-   $result = db_query ("SELECT * FROM $table_domain WHERE domain='$fDomain'");
-   if ($result['rows'] == 1)
-   {
-      $row = db_array ($result['result']);
-      $tQuota = allowed_quota($tDomain, 0);
-      # TODO: check for remaining domain quota, reduce $tQuota if it is lower
-      # Note: this is dependent on the domain, which means to do it correct we'd have to remove the domain dropdown and hardcode the domain name from ?domain=...
-      # allowed_quota() will provide the maximum allowed quota 
-   }
+            $username_error = $self->l('pCreate_mailbox_username_text_error3')
+                unless $self->check_mailbox($domain);
+
+            my $pass_generated;
+            if(not length $pass1 and not length $pass2 and $self->cfg('generate_password')) {
+                $pass1 = $self->generate_password; 
+                $pass_generated = 1;
+            } elsif(not length $pass1 or not length $pass2 or $pass1 ne $pass2) {
+                $password_error = $self->l('pCreate_mailbox_password_text_error');
+            } else {
+                eval { $self->validate_password($pass1) };
+                if($@) {
+                    # TODO localize
+                    chomp $@;
+                    $password_error = "Password check failed: $@";
+                }
+            }
+
+            $self->cfg('quota') and $self->check_quota($quota, $domain) or $quota_error = $self->l('pCreate_mailbox_quota_text_error');
+            $self->model('alias')->get_goto_by_address($username_dom)->flat and $username_error = $self->l('pCreate_mailbox_username_text_error2');
+
+            unless($username_error or $password_error or $quota_error) {
+                my $maildir;
+                my $password = $self->pacrypt($pass1);
+                if($self->cfg('maildir_name_hook')) {
+                    # TODO call creation hook here
+                } elsif($self->cfg('domain_path')) {
+                    $maildir = $self->cfg('domain_in_mailbox') ? "$domain/$username_dom/" : "$domain/$username/"
+                } else {
+                    $maildir = "$username_dom/";
+                }
+
+                $quota = $self->multiply_quota($quota) // 0;
+
+                # TODO handle Postgres (0,1)=>('f','t');
+                $active = 'on' eq $active ? 1 : 0;
+                # TODO support Postgres' transactions (db_query('BEGIN');)
+
+                if(1 == $self->model('alias')->insert($username_dom, $username_dom, $domain, $active)->rows) {
+                    # INSERT was successful
+                    if(1 == $self->model('mailbox')->insert($username_dom, $password, $name, $maildir, $username, $quota, $domain, $active)->rows) {
+                        # TODO db_query('COMMIT');
+                        $self->log($domain, 'create_mailbox', $username_dom);
+                        $quota = $self->_allowed_quota($domain, 0);
+                        $self->_welcome_mail($username_dom) if $send_mail eq 'on';
+
+                        my $showpass = ($pass_generated or $self->cfg('show_password')) ? " / $password" : '';
+                        my $folders_ok = $self->_create_mailbox_subfolders($username_dom, $password);
+                        $self->flash(info => $self->l(
+                                $folders_ok ?
+                                'pCreate_mailbox_result_success' :
+                                'pCreate_mailbox_result_succes_nosubfolders') .
+                            "<br />($username$showpass)"
+                        );
+                    } else {
+                        # TODO should we try to manually roll back the previous INSERT for MySQL?
+                        # TODO db_query('ROLLBACK');
+                        $self->flash(error => $self->l('pCreate_mailbox_result_error') . "<br />($username_dom)");
+                    }
+
+                } else {
+                    # TODO get rid of HTML here
+                    $self->flash(error => $self->l('pAlias_result_error') . "<br />($username_dom -> $username_dom)");
+                    # TODO db_query('ROLLBACK');
+                }
+
+            }
+        }
+    }
+
+    $self->render(
+        template        => 'mailbox/edit',
+        mode            => 'create',
+        username        => $username,
+        active          => $active,
+        domains         => \@domains,
+        act_domain      => $domain,
+        username_error  => $username_error,
+        password_error  => $password_error,
+        quota_error     => $quota_error,
+        name            => $name,
+        quota           => $quota,
+    );
 }
 
-if ($_SERVER['REQUEST_METHOD'] == "POST")
-{
+sub _welcome_mail {
+    my ($self, $to) = @_;
 
-   if (isset ($_POST['fUsername']) && isset ($_POST['fDomain'])) $fUsername = escape_string ($_POST['fUsername']) . "@" . escape_string ($_POST['fDomain']);
-   $fUsername = strtolower ($fUsername);
-   if (isset ($_POST['fPassword'])) $fPassword = escape_string ($_POST['fPassword']); # TODO: remove escaping (except for DB query and when handing it over to dovecotpw) - https://sourceforge.net/tracker/?func=detail&aid=3094804&group_id=191583&atid=937964
-   if (isset ($_POST['fPassword2'])) $fPassword2 = escape_string ($_POST['fPassword2']);
-   isset ($_POST['fName']) ? $fName = escape_string ($_POST['fName']) : $fName = "";
-   if (isset ($_POST['fDomain'])) $fDomain = escape_string ($_POST['fDomain']);
-   isset ($_POST['fQuota']) ? $fQuota = intval($_POST['fQuota']) : $fQuota = 0;
-   isset ($_POST['fActive']) ? $fActive = escape_string ($_POST['fActive']) : $fActive = "1";
-   if (isset ($_POST['fMail'])) $fMail = escape_string ($_POST['fMail']);
-
-
-   if ( (!check_owner ($SESSID_USERNAME, $fDomain)) && (!authentication_has_role('global-admin')) )
-   {
-      $error = 1;
-      $pCreate_mailbox_username_text_error = $PALANG['pCreate_mailbox_username_text_error1'];
-   }
-
-   if (!check_mailbox ($fDomain))
-   {
-      $error = 1;
-      $pCreate_mailbox_username_text_error = $PALANG['pCreate_mailbox_username_text_error3'];
-   }
-
-   if (empty ($fUsername) or !check_email ($fUsername))
-   {
-      $error = 1;
-      $pCreate_mailbox_username_text_error = $PALANG['pCreate_mailbox_username_text_error1'];
-   }
-
-   $tPassGenerated = 0;
-   if (empty ($fPassword) && empty ($fPassword2) && $CONF['generate_password'] == "YES") {
-      $fPassword = generate_password ();
-      $tPassGenerated = 1;
-   } elseif (empty ($fPassword) || empty ($fPassword2) || ($fPassword != $fPassword2)) {
-         $error = 1;
-         $pCreate_mailbox_password_text_error = $PALANG['pCreate_mailbox_password_text_error'];
-   } else {
-      $validpass = validate_password($fPassword);
-      if(count($validpass) > 0) {
-         $pCreate_mailbox_password_text_error = $validpass[0]; # TODO: honor all error messages, not only the first one
-         $error = 1;
-      }
-   }
-
-   if ($CONF['quota'] == "YES")
-   {
-      if (!check_quota ($fQuota, $fDomain))
-      {
-         $error = 1;
-         $pCreate_mailbox_quota_text_error = $PALANG['pCreate_mailbox_quota_text_error'];
-      }
-   }
-
-   $result = db_query ("SELECT * FROM $table_alias WHERE address='$fUsername'");
-   if ($result['rows'] == 1)
-   {
-      $error = 1;
-      $pCreate_mailbox_username_text_error = $PALANG['pCreate_mailbox_username_text_error2'];
-   }
-
-   if ($error != 0) {
-      $tUsername = escape_string ($_POST['fUsername']);
-      $tName = $fName;
-      $tQuota = $fQuota;
-      $tDomain = $fDomain;
-   } else {
-      $password = pacrypt ($fPassword);
-
-      if($CONF['maildir_name_hook'] != 'NO' && function_exists($CONF['maildir_name_hook'])) {
-         $hook_func = $CONF['maildir_name_hook'];
-         $maildir = $hook_func ($fDomain, $fUsername);
-      }
-      else if ($CONF['domain_path'] == "YES")
-      {
-         if ($CONF['domain_in_mailbox'] == "YES")
-         {
-            $maildir = $fDomain . "/" . $fUsername . "/";
-         }
-         else
-         {
-            $maildir = $fDomain . "/" . escape_string (strtolower($_POST['fUsername'])) . "/";
-         }
-      }
-      else
-      {
-         $maildir = $fUsername . "/";
-      }
-
-      if (!empty ($fQuota))
-      {
-         $quota = multiply_quota ($fQuota);
-      }
-      else
-      {
-         $quota = 0;
-      }
-
-      if ($fActive == "on")
-      {
-         $sqlActive = db_get_boolean(True);
-      }
-      else
-      {
-         $sqlActive = db_get_boolean(False);
-      }
-      if ('pgsql'==$CONF['database_type'])
-      {
-         db_query('BEGIN');
-      }
-
-      $result = db_query ("INSERT INTO $table_alias (address,goto,domain,created,modified,active) VALUES ('$fUsername','$fUsername','$fDomain',NOW(),NOW(),'$sqlActive')");
-      if ($result['rows'] != 1)
-      {
-         $tDomain = $fDomain;
-         flash_error($PALANG['pAlias_result_error'] . "<br />($fUsername -> $fUsername)");
-      }
-
-      // apparently uppercase usernames really confuse some IMAP clients.
-      $fUsername = strtolower($fUsername);
-      $local_part = '';
-      if(preg_match('/^(.*)@/', $fUsername, $matches)) {
-         $local_part = $matches[1];
-      }
-
-      $result = db_query ("INSERT INTO $table_mailbox (username,password,name,maildir,local_part,quota,domain,created,modified,active) VALUES ('$fUsername','$password','$fName','$maildir','$local_part','$quota','$fDomain',NOW(),NOW(),'$sqlActive')");
-      if ($result['rows'] != 1 || !mailbox_postcreation($fUsername,$fDomain,$maildir, $quota))
-      {
-         $tDomain = $fDomain;
-         flash_error($PALANG['pCreate_mailbox_result_error'] . "<br />($fUsername)");
-         db_query('ROLLBACK');
-      }
-      else
-      {
-         db_query('COMMIT');
-         db_log ($fDomain, 'create_mailbox', "$fUsername");
-         $tDomain = $fDomain;
-
-         $tQuota = allowed_quota($tDomain, 0);
-
-         if ($fMail == "on")
-         {
-            $fTo = $fUsername;
-            $fFrom = smtp_get_admin_email();
-            $fSubject = $PALANG['pSendmail_subject_text'];
-            $fBody = $CONF['welcome_text'];
-
-            if (!smtp_mail ($fTo, $fFrom, $fSubject, $fBody))
-            {
-               flash_error($PALANG['pSendmail_result_error']);
-            }
-            else
-            {
-               flash_info($PALANG['pSendmail_result_success']);
-            }
-         }
-
-         $tShowpass = "";
-         if ( $tPassGenerated == 1 || $CONF['show_password'] == "YES") $tShowpass = " / $fPassword";
-
-         if (create_mailbox_subfolders($fUsername,$fPassword))
-         {
-            flash_info($PALANG['pCreate_mailbox_result_success'] . "<br />($fUsername$tShowpass)");
-         } else {
-            flash_info($PALANG['pCreate_mailbox_result_succes_nosubfolders'] . "<br />($fUsername$tShowpass)");
-         }
-
-      }
-   }
+    my $msg = MIME::Lite->new(
+        From    => $self->cfg('admin_email') || $self->auth_get_username,
+        To      => $to,
+        Subject => $self->l('pSendmail_subject_text'),
+        Type    => 'text/plain',
+        Data    => $self->cfg('welcome_text'), 
+    );
+    eval {
+        $msg->send('smtp', $self->cfg('smtp_server') || 'localhost',
+            Port    => $self->cfg('smtp_port') || 25,
+            Timeout => 30,
+        );
+    };
+    if($@) {
+        chomp $@;
+        $self->flash(error => $self->l('pSendmail_result_error') . "($@)");
+    } else {
+        $self->flash(info => $self->l('pSendmail_result_success'));
+    }
 }
 
-$smarty->assign ('mode', 'create');
-$smarty->assign ('tUsername', $tUsername);
-$smarty->assign ('tActive', ' checked="checked" '); # TODO: use form value if POST
-$smarty->assign ('select_options', select_options ($list_domains, array ($tDomain)), false);
-$smarty->assign ('pCreate_mailbox_username_text_error', $pCreate_mailbox_username_text_error, false);
-$smarty->assign ('mailbox_password_text_error', $pCreate_mailbox_password_text_error, false);
-$smarty->assign ('tName', $tName, false);
-$smarty->assign ('tQuota', $tQuota);
-$smarty->assign ('mailbox_quota_text_error', $pCreate_mailbox_quota_text_error, false);
-$smarty->assign ('smarty_template', 'edit-mailbox');
-$smarty->display ('index.tpl');
+sub _allowed_quota {
+    my ($self, $domain, $current_user_quota) = @_;
+    my $dprops = $self->get_domain_properties($domain);
+    my $maxquota = $dprops->{maxquota};
 
+    if($self->cfg('domain_quota') and $dprops->{quota}) {
+        my $dquota = $dprops->{quota} - $self->divide_quota($dprops->{quota_sum} - $current_user_quota);
+        $maxquota = $dquota if($dquota < $maxquota or 0 == $maxquota);
+    }
+    return $maxquota;
 }
 
 1;

@@ -1,13 +1,7 @@
 [% INCLUDE menu.tt %]
 <div id="overview">
 <form name="overview" method="post">
-<select name="fUsername" onChange="this.form.submit()>
-[% IF admins.defined %]
-    [% FOREACH admin IN admins %]
-        [% selected = fUsername == admin ? ' selected="selected"' : '' %]
-        <option value="[% admin %]"[% selected %]>[% admin %]</option>
-    [% END %]
-[% END %]
+[% gen_select('username', admins, admin, 'onChange="this.form.submit();"') %]
 </select>
 <input class="button" type="submit" name="go" value="[% i18n('pOverview_button') %]" />
 </form>

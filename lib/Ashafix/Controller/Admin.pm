@@ -7,7 +7,7 @@ use Digest::MD5;
 sub create {
     my $self = shift;
 
-    given($self->req->method) {
+    for($self->req->method) {
         when('GET') {
             return $self->render(
                 pAdminCreate_admin_username_text => $self->l('pAdminCreate_admin_username_text'),
@@ -97,23 +97,16 @@ sub _create_admin {
 sub _check_email_validity {
     my ($self, $uname) = @_;
 
-    my $mvalid = Email::Valid->new(
-        -mxcheck => $self->cfg('emailcheck_resolve_domain'),
-        -tldcheck => 1
-    );
-    return 1 if $mvalid->address($uname);
-
-    my $err;
-    given($mvalid->details) {
-        when('fqdn')    { $err = 'pInvalidDomainRegex' }
-        when('mxcheck') { $err = 'pInvalidDomainDNS'   }
-        default         { $err = 'pInvalidMailRegex'   }
+    eval { $self->check_email_validity($uname) }
+    if($@) {
+        chomp $@;
+        $self->flash(error => $@);
+        $self->render(
+            pAdminCreate_admin_username_text => $self->l('pAdminCreate_admin_username_text_error1')
+        );
+        return;
     }
-    $self->flash(error => $self->l($err));
-    $self->render(
-        pAdminCreate_admin_username_text => $self->l('pAdminCreate_admin_username_text_error1')
-    );
-    return;
+    return 1;
 }
 
 sub _check_passwords {

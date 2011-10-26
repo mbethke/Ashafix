@@ -16,8 +16,7 @@
         <td colspan="2">
             <select name="lang" xml:lang="en" dir="ltr">
             [% FOREACH langpair IN supported_languages %]
-                [% sel = langpair.key == h.languages ? ' selected="selected"' : '' %]
-                <option value="[% langpair.key %]"[% sel %]>[% langpair.value %]</option>
+                <option value="[% langpair.key %]"[% ' selected="selected"' IF langpair.key == h.languages %]>[% langpair.value %]</option>
             [% END %]
             </select>
         </td>

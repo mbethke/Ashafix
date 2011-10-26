@@ -5,7 +5,10 @@
   instead of selecting them by what "usually looks the right size" 
 - Fatten the Model classes with more business logic that shouldn't be in the
   Controllers
-- Remove silly distinction between PHP->Form and Form->PHP variable names f* and t*
+- Remove the rest of silly distinctions between PHP->Form and Form->PHP variable names
+  f* and t*
 - Decide whether to use whitespace-chomping TT tags (source looks better, more work)
   or aggressively chomp using TT options (smaller)
 - Refactor the whole mess to smaller testable units
+- Implement account creation hooks
+- Properly support Postgres

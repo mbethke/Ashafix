@@ -17,9 +17,9 @@ END %]
 [%# Resolve symbolic URL and append a "?domain=..." parameter if get_domain is set %]
 [% MACRO domurl(url) BLOCK;
     IF get_domain;
-        urlfor(url, domain=get_domain);
+        GET urlfor(url, domain=get_domain);
     ELSE;
-        urlfor(url);
+        GET urlfor(url);
     END;
 END %]
 
@@ -30,7 +30,7 @@ END %]
 
 [% submenu_virtual = BLOCK;
     durl = domurl('mailbox-create');
-    menulink(durl, 'pMenu_create_mailbox');
+    menulinknamed(durl, 'pMenu_create_mailbox');
     durl = domurl('alias-create');
     menulink(durl, 'pMenu_create_alias');
     IF conf.alias_domain;
@@ -58,7 +58,7 @@ END;
 menulink(url, 'pAdminMenu_list_virtual', submenu_virtual) %]
 
 [% IF conf.fetchmail %]
-    [% submenu_fetchmail = BLOCK; menulinknamed('fetchmail-run', 'pFetchmail_new_entry');   END %]
+    [% submenu_fetchmail = BLOCK; menulinknamed('fetchmail-run', 'pFetchmail_new_entry'); END %]
     [% menulinknamed('fetchmail-run', 'pMenu_fetchmail', submenu_fetchmail) %]
 [% END %]
 

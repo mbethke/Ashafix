@@ -57,7 +57,7 @@ sub create {
 
     if('on' eq $params{defaultaliases}) {
         while(my ($alias, $dest) = each %{$conf->{default_aliases}}) {
-            $self->model('alias')->insert("$alias\@$params{domain}", $dest, $params{domain});
+            $self->model('alias')->insert("$alias\@$params{domain}", $dest, $params{domain}, 1);
         }
     }
 
@@ -99,7 +99,7 @@ sub delete {
 
 sub list {
     my $self = shift;
-    my ($admin_properties, $is_globaladmin, $fUsername, @admins, @domains);
+    my ($admin_properties, $is_globaladmin, $username, @admins, @domains);
 
     my $model = $self->model('complex');
 
@@ -107,9 +107,9 @@ sub list {
         $is_globaladmin = 1;
         # Global admins can see all other admins' domains
         @admins = $self->model('admin')->get_all_admin_names->flat;
-        $fUsername = $self->param('fUsername');
-        if($fUsername) {
-            $admin_properties = $self->get_admin_properties($fUsername);
+        $username = $self->param('username');
+        if($username) {
+            $admin_properties = $self->get_admin_properties($username);
         }
     } else {
         @admins  = $self->auth_get_username;  # only one element
@@ -117,8 +117,8 @@ sub list {
 
     if($is_globaladmin or ($admin_properties and 'ALL' eq $admin_properties->{domain_count})) {
         @domains = 'ALL';
-    } elsif(defined $fUsername and length $fUsername) {
-        @domains = $model->get_domains_for_admin($fUsername);
+    } elsif(defined $username and length $username) {
+        @domains = $model->get_domains_for_admin($username);
     } elsif($is_globaladmin) {
         @domains = 'ALL';
     } else {

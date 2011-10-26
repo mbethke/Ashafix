@@ -61,7 +61,7 @@ sub setup_plugins {
     # Setup signed sessions
     $self->app->secret($self->app->defaults->{conf}{secret});
     #$self->sessions->cookie_domain('localhost');    # TODO configurable
-    $self->sessions->cookie_name('mailadmin');
+    $self->sessions->cookie_name('ashafix');
 
     # Language support
     $self->plugin('I18N' => { default => 'en'});
@@ -249,4 +249,3 @@ sub pacrypt {
 }
 
 1;
-__END__

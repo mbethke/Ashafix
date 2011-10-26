@@ -198,13 +198,4 @@ sub check_alias_owner {
     return 1;
 }
 
-sub divide_quota {
-    my ($self, $quota) = @_;
-    state $mult = $self->cfg('quota_multiplier');
-
-    return unless defined $quota;
-    return $quota if -1 == $quota;
-    return sprintf("%.2d", ($quota / $mult) + 0.05);
-}
-
 1;

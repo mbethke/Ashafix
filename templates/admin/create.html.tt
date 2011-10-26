@@ -25,7 +25,7 @@
       <td>
          <select name="fDomains" size="10" multiple="multiple">
             [% FOREACH dom IN domains %]
-               <option value="[% dom %]" [% tDomains.in_list(dom) ? 'selected' : '' %]>[% dom %]</option>
+               <option value="[% dom %]"[% ' selected="selected"' IF tDomains.in_list(dom) %]>[% dom %]</option>
             [% END %]
          </select>
       </td>

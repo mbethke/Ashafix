@@ -21,8 +21,12 @@ use base 'Ashafix::Model::Base';
 
 our %queries = (
     count_domain_mailboxes  => "SELECT COUNT(*) FROM %table_mailbox WHERE domain=?",
+    get_domain_data         => "SELECT * FROM %table_domain WHERE domain=?",
     get_domain_quota        => "SELECT SUM(quota) FROM %table_mailbox WHERE domain=?",
     delete_by_domain        => "DELETE FROM %table_mailbox WHERE domain=?",
+    insert                  => "INSERT INTO %table_mailbox
+        (username,password,name,maildir,local_part,quota,domain,created,modified,active)
+        VALUES (?,?,?,?,?,?,?,NOW(),NOW(),?)",
 );
 
 1;

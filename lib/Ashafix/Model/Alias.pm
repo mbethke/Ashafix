@@ -26,7 +26,7 @@ our %queries = (
     count_domain_aliases    => "SELECT COUNT(*) FROM %table_alias WHERE domain=?",
     delete_by_domain        => "DELETE FROM %table_alias WHERE domain=?",
     insert                  => "INSERT INTO %table_alias
-        (address,goto,domain,created,modified) VALUES (?,?,?,NOW(),NOW())",
+        (address,goto,domain,created,modified) VALUES (?,?,?,NOW(),NOW(),?)",
 );
 
 1;

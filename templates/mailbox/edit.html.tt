@@ -14,7 +14,7 @@
 		    <td>&nbsp;</td>
         [% ELSE %]
 		    <td><input class="flat" type="text" name="username" value="[% username %]"/></td>
-		    <td>@<select name="domain">[% "TODO" %]</select></td>
+		    <td>@[% gen_select('domain', domains, act_domain) %]</td>
 		    <td class="error_msg">[% mailbox_username_error %]</td>
         [% END %]
 	</tr>
@@ -48,7 +48,7 @@
     [% END %]
 	<tr>
 		<td class="label"><label>[% i18n('pCreate_mailbox_active') %]:</label></td>
-		<td><input class="flat" type="checkbox" name="active"[% $active %]/></td>
+		<td><input class="flat" type="checkbox" name="active"[% 'checked="checked"' IF active %]/></td>
 		<td colspan="2">&nbsp;</td>
 	</tr>
     [% IF $mode == 'create' %]

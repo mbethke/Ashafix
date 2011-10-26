@@ -15,10 +15,12 @@ package Ashafix::Controller;
 #      CREATED:  09/12/2011 03:58:21 PM
 #     REVISION:  ---
 #===============================================================================
-
+use 5.010;
 use Mojo::Base 'Mojolicious::Controller';
 use Digest::MD5;
 use URI::Escape;
+use Email::Valid;
+use Carp;
 
 # Get the currently logged in user
 sub auth_get_username {
@@ -83,6 +85,22 @@ sub generate_password {
     return substr(Digest::MD5::md5_base64(rand),0,10)
 }
 
+# Check a password's kwalitee. If Crypt::Cracklib is not available, anything
+# with at least 6 characters is fine.
+# Dies with a reason in $@ on check failure.
+sub validate_password {
+    my ($self, $pw) = @_;
+    # Don't bother with all these hand-written regexen and use trusty ol'
+    # Cracklib if available. If not, Bad Luck[tm].
+    eval "use Crypt::Cracklib ();";
+    if($@) {
+        6 <= length $pw and return 1;
+        die "it is too short\n";
+    }
+    my $result = Crypt::Cracklib::fascist_check($pw);
+    die "$result\n" unless $result eq 'ok';
+}
+
 sub delete_alias_or_mailbox {
     my ($self, $addr) = @_;
     my $user = $self->auth_get_username;
@@ -125,4 +143,95 @@ sub get_domains_for_user {
     $self->auth_has_role('globaladmin') and return $self->model('domain')->get_real_domains->flat;
     return $self->model('domain')->get_domains_for_admin($self->auth_get_username)->flat;
 }
+
+# Recalculate mailbox quota to bytes
+sub divide_quota {
+    my ($self, $quota) = @_;
+
+    return unless defined $quota;
+    return $quota if -1 == $quota;
+    return sprintf("%.2d", ($quota / $self->cfg('quota_multiplier')) + 0.05);
+}
+
+# Recalculate mailbox quota to megabytes
+sub multiply_quota {
+    my ($self, $quota) = @_;
+
+    return unless defined $quota;
+    return $quota if -1 == $quota;
+    return $quota * $self->cfg('quota_multiplier');
+}
+
+sub check_domain_owner {
+    my ($self, $user, $domain) = @_;
+
+    if($self->auth_has_role('globaladmin')) {
+        # Global admins "own" every domain, so just check that domain actually exists
+        $self->model('domain')->check_domain($domain)->flat and return 1;
+        $self->flash(error => "Domain `$domain' does not exist");
+        return;
+    }
+    my @doms = $self->model('domainadmin')->check_domain_owner($user, $domain)->flat and return 1;
+    return;
+}
+
+# Check validity of an email address
+# Returns true on success , dies on error with a localized error message in $@
+sub check_email_validity {
+    my ($self, $uname) = @_;
+
+    my $mvalid = Email::Valid->new(
+        -mxcheck => $self->cfg('emailcheck_resolve_domain'),
+        -tldcheck => 1
+    );
+    return 1 if $mvalid->address($uname);
+
+    my $err;
+    given($mvalid->details) {
+        when('fqdn')    { $err = 'pInvalidDomainRegex' }
+        when('mxcheck') { $err = 'pInvalidDomainDNS'   }
+        default         { $err = 'pInvalidMailRegex'   }
+    }
+    die $self->l($err) . "\n";
+}
+
+
+# Log actions to database
+# Call: db_log (string domain, string action, string data)
+# Possible actions are:
+# 'create_domain'
+# 'create_alias'
+# 'create_alias_domain'
+# 'create_mailbox'
+# 'delete_domain'
+# 'delete_alias'
+# 'delete_alias_domain'
+# 'delete_mailbox'
+# 'edit_domain'
+# 'edit_alias'
+# 'edit_alias_state'
+# 'edit_alias_domain_state'
+# 'edit_mailbox'
+# 'edit_mailbox_state'
+# 'edit_password'
+#
+sub db_log {
+    my ($self, $domain, $action, $data) =@_;
+    state $logging = $self->cfg('logging');
+    state $LOG_ACTIONS = {
+        map { $_ => 1 } qw/
+        create_alias edit_alias edit_alias_state delete_alias create_mailbox
+        edit_mailbox edit_mailbox_state delete_mailbox create_domain edit_domain
+        delete_domain create_alias_domain edit_alias_domain_state
+        delete_alias_domain edit_password /
+    };
+
+    die "Invalid log action `$action'" unless defined $LOG_ACTIONS->{$action};
+    return unless $logging;
+
+    my $remote_addr = $self->tx->remote_address;
+    my $username = $self->auth_get_username;
+    return 1 == $self->model('log')->insert("$username ($remote_addr)", $domain, $action, $data)->rows;
+}
+
 1;

@@ -41,12 +41,12 @@
     [% END %]
     <tr>
         <td>[% i18n('pAdminCreate_domain_defaultaliases') _ ':' %]</td>
-        <td><input class="flat" type="checkbox" value='on' name="defaultaliases"[% defaultaliases == 'on' ? ' checked="checked"' : '' %] /></td>
+        <td><input class="flat" type="checkbox" value='on' name="defaultaliases"[% 'checked="checked"' IF defaultaliases == 'on' %] /></td>
         <td>[% i18n('pAdminCreate_domain_defaultaliases_text') %]</td>
     </tr>
     <tr>
         <td>[% i18n('pAdminCreate_domain_backupmx') _ ':' %]</td>
-        <td><input class="flat" type="checkbox" value='on' name="backupmx"[% backupmx == 'on' ? ' checked="checked"' : '' %]/></td>
+        <td><input class="flat" type="checkbox" value='on' name="backupmx"[% 'checked="checked"' IF backupmx == 'on' %]/></td>
       <td>&nbsp;</td>
    </tr>
    <tr>

@@ -134,7 +134,7 @@ sub html {
     my $s = '';
 
     foreach my $test ( [deliverable => 'undeliverable'], [popimap => 'popimap'] ) {
-        given($self->{$test->[0]}) {
+        for($self->{$test->[0]}) {
             when($STATUS_NORMAL) { $s .= "${sstxt}&nbsp;"; }
             when($STATUS_HILITE) { $s .= _html_colorstatus($colors{$test->[1]}); }
             default { die "BUG: invalid $test->[0] status `$self->{$test->[0]}'"; }
