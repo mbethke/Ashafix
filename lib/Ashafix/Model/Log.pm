@@ -21,7 +21,7 @@ use base 'Ashafix::Model::Base';
 
 our %queries = (
     delete              => "DELETE FROM %table_log WHERE domain=?",
-    insert              => "INSERT INTO %table_log VALUES (NOW,?,?,?,?)",
+    insert              => "INSERT INTO %table_log VALUES (NOW(),?,?,?,?)",
 );
 
 1;

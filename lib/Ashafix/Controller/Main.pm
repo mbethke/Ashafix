@@ -29,7 +29,7 @@ sub login {
         $self->redirect_to('index');
     } else {
         # Login failed
-        $self->flash(error => $self->l('pLogin_failed'));
+        $self->flash_error($self->l('pLogin_failed'));
     }
 }
 

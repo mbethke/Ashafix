@@ -1,3 +1,4 @@
+[% INCLUDE 'menu.tt' %]
 <div id="edit_form">
 <form name="mailbox" method="post" action="">
 <table>

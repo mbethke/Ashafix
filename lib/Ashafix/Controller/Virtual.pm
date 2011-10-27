@@ -45,7 +45,7 @@ sub list {
     $is_globaladmin = $self->auth_has_role('globaladmin');
 
     unless(@allowed_domains) {
-        $self->flash(error => $self->l(
+        $self->flash_error($self->l(
                 $is_globaladmin ? 'no_domains_exist' : 'no_domains_for_this_admin')
         );
         return $self->redirect_to('domain-list');
@@ -57,7 +57,7 @@ sub list {
 
     unless(any { $_ eq $domain } @allowed_domains) {
         # Domain parameter not in list of allowed domains
-        $self->flash(error => $self->l('invalid_parameter'));
+        $self->flash_error($self->l('invalid_parameter'));
         return $self->redirect_to('domain-list');
     }
 
@@ -186,16 +186,6 @@ sub eval_size {
     return $self->l('pOverview_unlimited') if $size == 0;
     return $self->l('pOverview_disabled')  if $size < 0;
     return $size;
-}
-
-sub check_alias_owner { 
-    my ($self, $username, $alias) = @_;
-
-    return 1 if $self->auth_has_role('globaladmin');
-
-    my ($localpart) = split /\@/, $alias;
-    return if(!$self->cfg('special_alias_control') and exists $self->cfg('default_aliases')->{$localpart});
-    return 1;
 }
 
 1;

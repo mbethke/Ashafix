@@ -22,6 +22,9 @@ use URI::Escape;
 use Email::Valid;
 use Carp;
 
+sub flash_error { $_[0]->flash(error => $_[1]) }
+sub flash_info  { $_[0]->flash(info  => $_[1]) }
+
 # Get the currently logged in user
 sub auth_get_username {
     my $self = shift;
@@ -101,31 +104,14 @@ sub validate_password {
     die "$result\n" unless $result eq 'ok';
 }
 
-sub delete_alias_or_mailbox {
-    my ($self, $addr) = @_;
-    my $user = $self->auth_get_username;
-
-    $self->check_mailbox_owner($user, $addr) or return $self->render(
-        template => 'message',
-        # TODO get rid of this HTML crap
-        tMessage => $self->l('pDelete_domain_error') . "<b>$addr</b>!</span>",
-    );
-    $self->check_alias_owner($user, $addr) or return $self->render(
-        template => 'message',
-        # TODO get rid of this HTML crap
-        tMessage => $self->l('pDelete_alias_error') . "<b>$addr</b>!</span>",
-    );
-    # TODO finish
-}
-
 sub get_domain_properties {
     my ($self, $domain) = @_;
     my %props;
     my $res = $self->model('domain')->get_domain_props($domain)->hash;
     %props = (
-        alias_count   => $self->model('alias')->count_domain_aliases($domain)->flat,
-        mailbox_count => $self->model('mailbox')->count_domain_mailboxes($domain)->flat,
-        quota_sum     => $self->model('mailbox')->get_domain_quota($domain)->flat,
+        alias_count   => $self->model('alias')->count_domain_aliases($domain)->flat->[0],
+        mailbox_count => $self->model('mailbox')->count_domain_mailboxes($domain)->flat->[0],
+        quota_sum     => $self->model('mailbox')->get_domain_quota($domain)->flat->[0],
         map { $_ => $res->{$_} } qw/ description aliases mailboxes maxquota quota transport backupmx created modified active /
         # TODO if ($CONF['database_type'] == "pgsql") {
         # $list['active']=('t'==$row['active']) ? 1 : 0;
@@ -158,6 +144,7 @@ sub multiply_quota {
     my ($self, $quota) = @_;
 
     return unless defined $quota;
+    print STDERR "multiply_quota(`$quota')\n";
     return $quota if -1 == $quota;
     return $quota * $self->cfg('quota_multiplier');
 }
@@ -167,11 +154,11 @@ sub check_domain_owner {
 
     if($self->auth_has_role('globaladmin')) {
         # Global admins "own" every domain, so just check that domain actually exists
-        $self->model('domain')->check_domain($domain)->flat and return 1;
-        $self->flash(error => "Domain `$domain' does not exist");
+        @{[$self->model('domain')->check_domain($domain)->flat]} and return 1;
+        $self->flash_error("Domain `$domain' does not exist");
         return;
     }
-    my @doms = $self->model('domainadmin')->check_domain_owner($user, $domain)->flat and return 1;
+    my @doms = $self->model('domainadmin')->check_domain_owner($user, $domain)->flat->[0] and return 1;
     return;
 }
 
@@ -195,6 +182,15 @@ sub check_email_validity {
     die $self->l($err) . "\n";
 }
 
+sub check_alias_owner { 
+    my ($self, $username, $alias) = @_;
+
+    return 1 if $self->auth_has_role('globaladmin');
+
+    my ($localpart) = split /\@/, $alias;
+    return if(!$self->cfg('special_alias_control') and exists $self->cfg('default_aliases')->{$localpart});
+    return 1;
+}
 
 # Log actions to database
 # Call: db_log (string domain, string action, string data)

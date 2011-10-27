@@ -23,10 +23,12 @@ our %queries = (
     get_address_2           => "SELECT address FROM %table_alias WHERE address IN (?,?)",
     get_address_3           => "SELECT address FROM %table_alias WHERE address IN (?,?,?)",
     get_goto_by_address     => "SELECT goto FROM %table_alias WHERE address=?",
+    check_alias             => "SELECT 1 from %table_alias WHERE address=? AND domain=?",
     count_domain_aliases    => "SELECT COUNT(*) FROM %table_alias WHERE domain=?",
     delete_by_domain        => "DELETE FROM %table_alias WHERE domain=?",
+    delete_by_alias         => "DELETE FROM %table_alias WHERE address=? AND domain=?",
     insert                  => "INSERT INTO %table_alias
-        (address,goto,domain,created,modified) VALUES (?,?,?,NOW(),NOW(),?)",
+        (address,goto,domain,created,modified,active) VALUES (?,?,?,NOW(),NOW(),?)",
 );
 
 1;

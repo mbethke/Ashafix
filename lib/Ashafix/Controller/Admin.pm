@@ -51,7 +51,7 @@ sub list {
     return $self->render(
         admins => {
             map {
-            ( $_ => $self->get_admin_properties($_) )
+                ( $_ => $self->get_admin_properties($_) )
             } $self->model('admin')->get_all_admin_names->flat
         }
     ); 
@@ -100,7 +100,7 @@ sub _check_email_validity {
     eval { $self->check_email_validity($uname) }
     if($@) {
         chomp $@;
-        $self->flash(error => $@);
+        $self->flash_error($@);
         $self->render(
             pAdminCreate_admin_username_text => $self->l('pAdminCreate_admin_username_text_error1')
         );
@@ -130,7 +130,7 @@ sub _check_passwords {
 sub _admin_exists {
     my ($self, $name) = @_;
     say "_admin_exists($name): ", join ", ", $self->model('admin')->select_admin($name)->flat;
-    return ($self->model('admin')->select_admin($name)->flat)[0];
+    return $self->model('admin')->select_admin($name)->flat->[0];
 }
 1;
 

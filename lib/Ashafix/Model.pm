@@ -19,7 +19,7 @@ use strict;
 use warnings;
 use DBIx::Simple;
 use SQL::Abstract;
-use Carp qw/ croak confess /;
+use Carp qw/ croak /;
 use Mojo::Loader;
 
 my $DB;
@@ -56,19 +56,25 @@ sub new {
             my ($basename) = $pm =~ /.*::(.*)/;
             $self->{modules}{lc $basename} = $pm->new($config{tabledefs});
         }
+        $self->{modules}{''} = $self;
     }
     return $self;
 }
 
 sub model {
     my ($self, $model) = @_;
-    return $self->{modules}{$model} || confess "Unknown model `$model'";
+    return $self->{modules}{$model // ''} || croak "Unknown model `$model'";
 }
 
 # Regular function, proxies $DB->query to simplify debugging
 sub query {
-    print STDERR "QUERY: $_[0] [@_[1 .. $#_]]\n";
+    print STDERR "QUERY: $_[0] ", ($#_ >=1 ? "[@_[1 .. $#_]]" : ''), "\n";
     $DB->query(@_);
 }
+
+# Transaction support
+sub begin    { query("BEGIN"); } 
+sub commit   { query("COMMIT"); }
+sub rollback { query("ROLLBACK"); }
 
 1;

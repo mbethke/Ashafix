@@ -68,9 +68,9 @@ sub _check_deliverable {
         if($rec_delim) {
             my $sans_delim;
             ($sans_delim = $goto) =~ s/\Q$rec_delim\E[^\Q$rec_delim\E]*\@/@/;
-            $addr = $self->{controller}->model('alias')->get_address_3($goto, $catchall, $sans_delim)->flat;
+            $addr = $self->{controller}->model('alias')->get_address_3($goto, $catchall, $sans_delim)->flat->[0];
         } else {
-            $addr = $self->{controller}->model('alias')->get_address_2($goto, $catchall)->flat;
+            $addr = $self->{controller}->model('alias')->get_address_2($goto, $catchall)->flat->[0];
         }
 
         unless($addr) {
