@@ -1,0 +1,19 @@
+This is a port of Postfixadmin to Perl/Mojolicious/TemplateToolkit. It aims to
+be cleaner, following an MVC pattern and strict modularization throughout, thus
+easier to extend and more secure. Most importantly it makes use of Perl's proper
+DBMS support via DBIx::Simple and thus uses none of the all too common in PHP
+way of interpolating inputs in SQL strings that gives you SQL injection
+vulnerabilities unless your manual escaping is perfect.
+
+Currently a lot of functionality is still missing but basic functions such as
+creating/editing/deleting domains and mailboxes are there.
+
+Notes:
+
+- Requires at least version 2.3 of the database, particularly regarding domain entries for global admins in the domainadmin table.
+- The MySQL database uses InnoDB for transactions and referential integrity
+  constraints. With databases this size, there is hardly any excuse for using
+  MyISAM today.
+- Postgres support is still broken but the above should simplify the task of
+  getting it to work. I'm still thinking about going DBIx::Class to abstract it
+  away.
