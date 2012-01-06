@@ -28,8 +28,8 @@ sub new {
     my $class = shift;
     my %config = @_;
 
-    foreach(qw/ dsn user password tabledefs /) {
-        croak "No `$_' was passed!" unless $config{$_};
+    foreach(qw/ dsn user password tabledefs newquota /) {
+        croak "No `$_' was passed!" unless defined $config{$_};
     }
 
     my $self = bless {}, $class;
@@ -54,7 +54,7 @@ sub new {
             my $e = Mojo::Loader->load($pm);
             croak "Loading `$pm' failed: $e" if ref $e;
             my ($basename) = $pm =~ /.*::(.*)/;
-            $self->{modules}{lc $basename} = $pm->new($config{tabledefs});
+            $self->{modules}{lc $basename} = $pm->new(\%config);
         }
         $self->{modules}{''} = $self;
     }

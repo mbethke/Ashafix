@@ -18,7 +18,8 @@ use strict;
 use warnings;
 
 sub new {
-    my ($class, $tabledefs) = @_;
+    my ($class, $config) = @_;
+    my $tabledefs = $config->{tabledefs};
 
     # Install a new method for each member of the package-global %queries
     no strict 'refs';

@@ -5,8 +5,9 @@ DBMS support via DBIx::Simple and thus uses none of the all too common in PHP
 way of interpolating inputs in SQL strings that gives you SQL injection
 vulnerabilities unless your manual escaping is perfect.
 
-Currently a lot of functionality is still missing but basic functions such as
-creating/editing/deleting domains and mailboxes are there.
+This is very much a work in progress. Currently a lot of functionality is still
+missing but basic functions such as creating/editing/deleting domains and
+mailboxes are there.
 
 Notes:
 

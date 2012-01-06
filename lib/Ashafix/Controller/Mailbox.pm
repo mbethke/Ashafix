@@ -257,20 +257,14 @@ sub _delete_mailbox {
 
 # TODO obsolete this using ON DELETE CASCADE in the DB
 sub _delete_mailbox_related {
-#             $result = db_query("SELECT * FROM $table_vacation WHERE email = '$fDelete' AND domain = '$fDomain'");
-#             if($result['rows'] == 1) {
-#                 db_query ("DELETE FROM $table_vacation WHERE email='$fDelete' AND domain='$fDomain'");
-#                 db_query ("DELETE FROM $table_vacation_notification WHERE on_vacation ='$fDelete' "); /* should be caught by cascade, if PgSQL */
-#             }
-#             $result = db_query("SELECT * FROM $table_quota WHERE username='$fDelete'");
-#             if($result['rows'] >= 1) {
-#                 db_query ("DELETE FROM $table_quota WHERE username='$fDelete'");
-#             }
-#             $result = db_query("SELECT * FROM $table_quota2 WHERE username='$fDelete'");
-#             if($result['rows'] == 1) {
-#                 db_query ("DELETE FROM $table_quota2 WHERE username='$fDelete'");
-#             }
-#         }
+    my ($self, $mailbox, $domain) = @_;
+
+    @{[$self->model('vacation')->check_by_mbox($mailbox, $domain)]} and
+        $self->model('vacation')->delete_vacation($mailbox, $domain);
+        # Skip this, use ON DELETE CASCADE everywhere
+#       db_query ("DELETE FROM $table_vacation_notification WHERE on_vacation ='$fDelete' "); /* should be caught by cascade, if PgSQL */
+    @{[$self->model('quota')->find_by_user($mailbox)]} and
+        $self->model('quota')->delete($mailbox);
 }
 
 # TODO implement

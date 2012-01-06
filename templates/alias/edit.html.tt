@@ -2,24 +2,41 @@
     <form name="alias" method="post">
         <table>
             <tr>
-                <td colspan="3"><h3>[% i18n('pEdit_alias_welcome') %]</h3></td>
+                <th colspan="4">
+                    [% 'edit' == mode ? i18n('pEdit_alias_welcome') : i18n('pCreate_alias_welcome') %]
+                </th>
             </tr>
             <tr>
-                <td>[% i18n('pEdit_alias_address') _ ":";  %]</td>
-                <td>[% address %]</td>
-                <td>&nbsp;</td>
+                <td class="label"><label>[% i18n('pEdit_alias_address') _ ":";  %]</label></td>
+                <td>
+                    [% IF 'edit' == mode %]
+                        <em>[% address %]</em>
+                    [% ELSE %]
+                        <input class="flat" type="text" name="adress" value="[% address %]" />@
+                        [% gen_select('domain', domains, domain, 'class="flat"') %]
+                </td>
+                <td>[% IF 'create' == mode; GET i18n('pCreate_alias_catchall_text') %]</td>
+                <td><span class="error_msg">[% i18n('pCreate_alias_address_text_error') %]</span></td>
             </tr>
             <tr>
-                <td>[% i18n('pEdit_alias_goto') _ ":";  %]</td>
+                <td class="label"><label>[% i18n('pEdit_alias_goto') _ ":";  %]</label></td>
                 <td><textarea class="flat" rows="10" cols="60" name="goto">[% goto %]</textarea></td>
+                <td>[% i18n('pCreate_alias_goto_text') %]<br /><br />[% i18n('pEdit_alias_help') %]</td>
                 <td>&nbsp;</td>
             </tr>
-            <tr>
-                <td colspan="3" class="hlp_center"><input class="button" type="submit" name="submit" value="[% i18n('pEdit_alias_button') %]" /></td>
-            </tr>
-            <tr>
-                <td colspan="3" class="standout">[% message %]</td>
-            </tr>
+
+            [% IF 'create' == mode %]
+            [%# TODO: 'active' should also be available in edit-alias %]
+	            <tr>
+		            <td class="label"><label>[% i18n('pCreate_alias_active') %]</label></td>
+		            <td><input class="flat" type="checkbox" name="fActive" checked="checked"/></td>
+		            <td colspan="2">&nbsp;</td>
+	            </tr>
+            [% END %]
+	        <tr>
+		        <td>&nbsp;</td>
+		        <td colspan="3"><input class="button" type="submit" name="submit" value="[% 'edit' == mode ? i18n('save') : i18n('pCreate_alias_button') %]" /></td>
+	        </tr>
         </table>
     </form>
 </div>

@@ -20,6 +20,7 @@ use warnings;
 use base 'Ashafix::Model::Base';
 
 our %queries = (
+    get_by_address          => "SELECT * FROM %table_alias WHERE address=? AND domain=?",
     get_address_2           => "SELECT address FROM %table_alias WHERE address IN (?,?)",
     get_address_3           => "SELECT address FROM %table_alias WHERE address IN (?,?,?)",
     get_goto_by_address     => "SELECT goto FROM %table_alias WHERE address=?",

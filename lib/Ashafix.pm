@@ -105,7 +105,9 @@ sub setup_routing {
                delete   => 'globaladmin',
            },
            alias => {
-               delete   => 'admin',
+               new      => 'user',
+               create   => 'user',
+               delete   => 'user',
            },
            domain => {
                list     => 'admin',
@@ -138,6 +140,7 @@ sub setup_model {
         user        => $config->{user},
         password    => $config->{password},
         tabledefs   => $self->config('database_tables'),
+        newquota    => $self->config('new_quota_table'),
     );
     $self->helper(model => sub { return $model->model($_[1]) });
 }

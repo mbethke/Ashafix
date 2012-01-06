@@ -3,7 +3,7 @@ package Ashafix::Model::Quota;
 #
 #         FILE:  Quota.pm
 #
-#  DESCRIPTION:  Old quota table
+#  DESCRIPTION:  Quota model, distinguishes between old and new quota tables
 #
 #         BUGS:  ---
 #        NOTES:  ---
@@ -18,7 +18,7 @@ use strict;
 use warnings;
 use base 'Ashafix::Model::Base';
 
-our %snippets = (
+our %queries = (
     find_by_user_old    => "SELECT * FROM %table_quota WHERE username=?",
     delete_old          => "DELETE FROM %table_quota WHERE username=?",
     find_by_user_new    => "SELECT * FROM %table_quota2 WHERE username=?",
