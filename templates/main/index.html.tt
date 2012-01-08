@@ -6,7 +6,7 @@
         <td>[% i18n('pMain_overview') %]</td>
     </tr>
     <tr>
-        <td nowrap><a target="_top" href="[% urlfor('alias-create') %]">[% i18n('pMenu_create_alias') %]</a></td>
+        <td nowrap><a target="_top" href="[% urlfor('alias-form') %]">[% i18n('pMenu_create_alias') %]</a></td>
         <td>[% i18n('pMain_create_alias') %]</td>
     </tr>
     <tr>

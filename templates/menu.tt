@@ -15,23 +15,24 @@ END %]
 [% END %]
 
 [%# Resolve symbolic URL and append a "?domain=..." parameter if get_domain is set %]
-[% MACRO domurl(url) BLOCK;
-    IF get_domain;
-        GET urlfor(url, domain=get_domain);
+[% MACRO domurl(route) BLOCK;
+    IF '' != get_domain;
+        GET urlfor(route, domain=get_domain);
     ELSE;
-        GET urlfor(url);
+        GET urlfor(route);
     END;
 END %]
 
 <div id='menu'>
 <ul>
 
+[%# URL specified in current GET request if any %]
 [% get_domain = c.req.url.query.param('domain') %]
 
 [% submenu_virtual = BLOCK;
     durl = domurl('mailbox-create');
     menulinknamed(durl, 'pMenu_create_mailbox');
-    durl = domurl('alias-create');
+    durl = domurl('alias-form');
     menulink(durl, 'pMenu_create_alias');
     IF conf.alias_domain;
         durl = domurl('domain-create-alias');

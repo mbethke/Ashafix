@@ -13,7 +13,6 @@ use Digest::MD5 ();
 
 my $VERSION = '0.0.1';
 
-# This method will run once at server start
 sub startup {
     my $self = shift;
     $Carp::Verbose = 1;     # TODO debugging only
@@ -31,9 +30,9 @@ sub setup_plugins {
             stash_key => 'conf'
         }
     );
+
     # Helper for quick config access
     $self->helper(cfg => sub { $_[0]->stash('conf')->{$_[1]} });
-    
 
     # Load Template Toolkit and set as default
     $self->plugin(
@@ -92,11 +91,6 @@ sub setup_routing {
     $r->route('/logout')->to('main#logout')->name('logout');
     $r->route('/main')->over('login')->to('main#index')->name('index');
 
-    # Bridges to force authentication
-    #my $usr = $r->bridge('/all')->to(cb => sub { return shift->auth_require_login });
-    #my $adm = $r->bridge('/admin')->to(cb => sub { return shift->auth_require_role('admin') });
-    #my $gad = $r->bridge('/gadmin')->to(cb => sub { return shift->auth_require_role('globaladmin') });
-
     $self->_generic_routing(
         {
            admin => {
@@ -105,9 +99,9 @@ sub setup_routing {
                delete   => 'globaladmin',
            },
            alias => {
-               new      => 'user',
-               create   => 'user',
-               delete   => 'user',
+               form     => 'GET#user',
+               create   => 'POST#user',
+               delete   => 'GET#user',
            },
            domain => {
                list     => 'admin',
@@ -151,11 +145,17 @@ sub _generic_routing {
     my $r = $self->routes;
 
     while(my ($controller, $actions) = each %$desc) {
-        while(my ($action, $role) = each %$actions) {
-            $r->route("/$controller/$action")
+        while(my ($action, $m_role) = each %$actions) {
+            my ($methods, $role) = split /#/, $m_role;
+            my $route = $r->route("/$controller/$action")
             ->to(controller => $controller, action => $action)
-            ->over('user' eq $role ? 'login' : (role => $role))
             ->name("$controller-$action");
+            if(defined $role) {
+                $route->over('user' eq $role ? 'login' : (role => $role))
+                ->via(split /\|/, $methods);
+            } else {
+                $route->over('user' eq $m_role ? 'login' : (role => $m_role))
+            }
         }
     }
 }

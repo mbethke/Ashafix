@@ -31,7 +31,7 @@ sub delete_alias {
 }
 
 # Delete an alias. No transactions and permission checking,
-# use delete_alias_trans from derived classes
+# use delete_alias from subclasses
 sub _delete_alias {
     my ($self, $alias, $domain) = @_;
     my $model = $self->model('alias');

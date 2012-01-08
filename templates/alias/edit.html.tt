@@ -1,5 +1,6 @@
+[% INCLUDE 'menu.tt' %]
 <div id="edit_form">
-    <form name="alias" method="post">
+    <form name="alias" method="post" action="[% urlfor(formto) %]">
         <table>
             <tr>
                 <th colspan="4">
@@ -12,16 +13,17 @@
                     [% IF 'edit' == mode %]
                         <em>[% address %]</em>
                     [% ELSE %]
-                        <input class="flat" type="text" name="adress" value="[% address %]" />@
+                        <input class="flat" type="text" name="address" value="[% address %]" />@
                         [% gen_select('domain', domains, domain, 'class="flat"') %]
+                    [% END %]
                 </td>
-                <td>[% IF 'create' == mode; GET i18n('pCreate_alias_catchall_text') %]</td>
-                <td><span class="error_msg">[% i18n('pCreate_alias_address_text_error') %]</span></td>
+                <td>[% IF 'create' == mode; GET i18n('pCreate_alias_catchall_text'); END %]</td>
+                <td><span class="error_msg">[% alias_error %]</span></td>
             </tr>
             <tr>
                 <td class="label"><label>[% i18n('pEdit_alias_goto') _ ":";  %]</label></td>
                 <td><textarea class="flat" rows="10" cols="60" name="goto">[% goto %]</textarea></td>
-                <td>[% i18n('pCreate_alias_goto_text') %]<br /><br />[% i18n('pEdit_alias_help') %]</td>
+                <td>[% i18n('pCreate_alias_goto_text') %]<br /><br />[% alias_help %]</td>
                 <td>&nbsp;</td>
             </tr>
 
