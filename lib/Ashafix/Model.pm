@@ -73,8 +73,8 @@ sub query {
 }
 
 # Transaction support
-sub begin    { query("BEGIN"); } 
-sub commit   { query("COMMIT"); }
-sub rollback { query("ROLLBACK"); }
+sub begin    { $DB->begin } 
+sub commit   { $DB->commit }
+sub rollback { $DB->rollback }
 
 1;

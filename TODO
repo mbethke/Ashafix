@@ -13,3 +13,4 @@
 - Refactor the whole mess to smaller testable units
 - Implement account creation/deletion hooks
 - Properly support Postgres (http://www.chrisspen.com/blog/enabling-implicit-cast-from-integer-to-boolean-in-postgresql.html might help)
+- Check templates for proper HTML entity filtering
