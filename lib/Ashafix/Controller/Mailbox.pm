@@ -69,7 +69,7 @@ sub create {
             $domain = $self->req->param('domain') // $domains[0];
             unless(any { $_ eq $domain } @domains) {
                 # TODO localize
-                $self->flash_error("Invalid domain name selected, or you tried to select a domain you are not an admin for!");
+                $self->show_error("Invalid domain name selected, or you tried to select a domain you are not an admin for!");
                 $domain = $domains[0];
             }
             $quota = $self->_allowed_quota($domain, 0);
@@ -162,7 +162,7 @@ sub create {
 
                         my $showpass = ($pass_generated or $self->cfg('show_password')) ? " / $password" : '';
                         my $folders_ok = $self->_create_mailbox_subfolders($username_dom, $password);
-                        $self->flash_info($self->l(
+                        $self->show_info($self->l(
                                 $folders_ok ?
                                 'pCreate_mailbox_result_success' :
                                 'pCreate_mailbox_result_succes_nosubfolders') .
@@ -171,13 +171,13 @@ sub create {
                     } else {
                         # TODO should we try to manually roll back the previous INSERT for MySQL?
                         # TODO db_query('ROLLBACK');
-                        $self->flash_error($self->l('pCreate_mailbox_result_error') . "<br />($username_dom)");
+                        $self->show_error($self->l('pCreate_mailbox_result_error') . "<br />($username_dom)");
                         return $render->();
                     }
 
                 } else {
                     # TODO get rid of HTML here
-                    $self->flash_error($self->l('pAlias_result_error') . "<br />($username_dom -> $username_dom)");
+                    $self->show_error($self->l('pAlias_result_error') . "<br />($username_dom -> $username_dom)");
                     # TODO db_query('ROLLBACK');
                     return $render->();
                 }
@@ -206,9 +206,9 @@ sub _welcome_mail {
     };
     if($@) {
         chomp $@;
-        $self->flash_error($self->l('pSendmail_result_error') . "($@)");
+        $self->show_error($self->l('pSendmail_result_error') . "($@)");
     } else {
-        $self->flash_info($self->l('pSendmail_result_success'));
+        $self->show_info($self->l('pSendmail_result_success'));
     }
 }
 
@@ -249,7 +249,7 @@ sub _delete_mailbox {
             $msg .= ', ' unless $postdel;
         }
         $msg .= 'post-deletion' unless $postdel;
-        $self->flash_error($msg);
+        $self->show_error($msg);
         return;
     }
     $self->db_log($domain, 'delete_mailbox', $mailbox);

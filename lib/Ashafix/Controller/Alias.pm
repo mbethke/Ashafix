@@ -56,7 +56,7 @@ sub create {
     # Check that destinations are valid
     foreach(@gotos) {
         unless($self->check_email_validity($_)) {
-            $self->flash_error($self->l('pInvalidMailRegex') . ": $_");
+            $self->show_error($self->l('pInvalidMailRegex') . ": $_");
             return $self->_render_create_error(
                 $domain, $address, $goto, 'pCreate_alias_address_text_error1'
             );
@@ -72,7 +72,7 @@ sub create {
     return $self->_render_create_error($domain, $address, $goto, 'pCreate_alias_address_text_error2')
         if @res;
 
-    $active = lc $active eq 'yes';  # TODO handle postgres
+    $active = lc $active eq 'on';  # TODO handle postgres
 
     my $fromto_text = "$address -> $goto";
 
@@ -82,18 +82,19 @@ sub create {
     };
     if($success) {
         $self->db_log($domain, 'create_alias', $fromto_text);
-        $self->flash_info($self->l('pCreate_alias_result_success') . "<br />($fromto_text)<br />");
+        $self->show_info($self->l('pCreate_alias_result_success') . "<br />($fromto_text)<br />");
+        $address = '';  # delete for next form
+        @gotos = ();
     } else {
         # Alias creation failed
-        $self->flash_error($self->l('pCreate_alias_result_error') . "<br />($fromto_text)<br />");
-        return $self->_render_create(
-            domain      => $domain,
-            address     => $address,
-            goto        => join("\r\n", @gotos),
-        );
+        $self->show_error($self->l('pCreate_alias_result_error') . "<br />($fromto_text)<br />");
+        warn "alias creation failed ($fromto_text)";
     };
-        print STDERR "DIE\n";
-        print STDERR "DIED\n";
+    return $self->_render_create(
+        domain      => $domain,
+        address     => $address,
+        goto        => join("\r\n", @gotos),
+    );
 }
 
 sub delete {

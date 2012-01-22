@@ -144,12 +144,12 @@ sub _check_domain {
     my $val = Email::Valid->new;
     # Check valid TLD
     unless($val->tld("foo\@$domain")) {
-        $self->flash_error(sprintf($self->l('pInvalidDomainRegex'), encode_entities($domain)));
+        $self->show_error(sprintf($self->l('pInvalidDomainRegex'), encode_entities($domain)));
         return;
     }
     # Check working DNS lookup
     if($self->stash('conf')->{emailcheck_resolve_domain} and !$val->mx($domain)) {
-        $self->flash_error(sprintf($self->l('pInvalidDomainDNS'), encode_entities($domain)));
+        $self->show_error(sprintf($self->l('pInvalidDomainDNS'), encode_entities($domain)));
         return;
     }
     return 1;
@@ -166,7 +166,7 @@ sub _postcreation {
 
     unless(length $domain) {
         # TODO localize
-        $self->flash_error("Warning: empty domain parameter in _postcreation()");
+        $self->show_error("Warning: empty domain parameter in _postcreation()");
         return;
     }
 
@@ -181,7 +181,7 @@ sub _postcreation {
         my $ret = $? >> 8;
         #error_log("$command exited with return code $ret; output:$output");
         # TODO localize
-        $self->flash_error("WARNING: Problems running domain postcreation script!");
+        $self->show_error("WARNING: Problems running domain postcreation script!");
         return;
     }
 

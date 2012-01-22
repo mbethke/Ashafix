@@ -100,7 +100,7 @@ sub _check_email_validity {
     eval { $self->check_email_validity($uname) }
     if($@) {
         chomp $@;
-        $self->flash_error($@);
+        $self->show_error($@);
         $self->render(
             pAdminCreate_admin_username_text => $self->l('pAdminCreate_admin_username_text_error1')
         );

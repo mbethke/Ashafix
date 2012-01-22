@@ -43,7 +43,7 @@ sub setup_plugins {
                 #DEBUG_FORMAT => '<!-- $file line $line : [% $text %] -->',
                 PRE_CHOMP   => Template::Constants::CHOMP_GREEDY,
                 POST_CHOMP  => Template::Constants::CHOMP_GREEDY,
-                PRE_PROCESS => [ qw/ttsetup.tt header.tt/ ],
+                PRE_PROCESS => [ qw/ header.tt / ],
                 POST_PROCESS=> 'footer.tt',
                 EVAL_PERL   => 1,
                 CONSTANTS   => {

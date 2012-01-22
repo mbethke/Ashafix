@@ -49,11 +49,11 @@ sub _check_alias_permissions {
     my $user = $self->session('user')->{name};
 
     unless($self->check_domain_owner($user, $domain)) {
-        $self->flash_error($self->l('pDelete_domain_error') . "($domain)");
+        $self->show_error($self->l('pDelete_domain_error') . "($domain)");
         return;
     }
     unless($self->check_alias_owner($user, $alias)) {
-        $self->flash_error($self->l('pDelete_alias_error') . "($alias)");
+        $self->show_error($self->l('pDelete_alias_error') . "($alias)");
         return;
     }
     return 1;

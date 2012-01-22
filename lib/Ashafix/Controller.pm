@@ -22,6 +22,8 @@ use URI::Escape;
 use Email::Valid;
 use Carp;
 
+sub show_error  { $_[0]->stash(error => $_[1]) }
+sub show_info   { $_[0]->stash(info  => $_[1]) }
 sub flash_error { $_[0]->flash(error => $_[1]) }
 sub flash_info  { $_[0]->flash(info  => $_[1]) }
 
@@ -155,7 +157,7 @@ sub check_domain_owner {
     if($self->auth_has_role('globaladmin')) {
         # Global admins "own" every domain, so just check that domain actually exists
         @{[$self->model('domain')->check_domain($domain)->flat]} and return 1;
-        $self->flash_error("Domain `$domain' does not exist");
+        $self->show_error("Domain `$domain' does not exist");
         return;
     }
     my @doms = $self->model('domainadmin')->check_domain_owner($user, $domain)->flat->[0] and return 1;
