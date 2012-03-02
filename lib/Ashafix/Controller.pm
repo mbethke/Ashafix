@@ -48,6 +48,7 @@ sub auth_require_role {
     my ($self, $role) = @_;
     return unless $self->auth_require_login;
     return 1 if $self->auth_has_role($role);
+    # TODO flash() "Insufficient privileges" or something?
     $self->redirect_to(named => 'login');
     return;
 }
@@ -176,12 +177,13 @@ sub check_email_validity {
     return 1 if $mvalid->address($uname);
 
     my $err;
+    (my $domainpart = $uname) =~ s/.*\@//;
     given($mvalid->details) {
         when('fqdn')    { $err = 'pInvalidDomainRegex' }
         when('mxcheck') { $err = 'pInvalidDomainDNS'   }
         default         { $err = 'pInvalidMailRegex'   }
     }
-    die $self->l($err) . "\n";
+    die sprintf($self->l($err), $domainpart) . "\n";    #TODO user-friendly
 }
 
 sub check_alias_owner { 

@@ -30,12 +30,13 @@ sub create {
     my $user  = $self->auth_get_username;
     my $model = $self->model('alias');
 
-    die "Check ashafix.conf - domain administrators do not have the ability to edit user's aliases (alias_control_admin)" # TODO do this more user friendly
+    return $self->_render_create_error("Check ashafix.conf - domain administrators do not have the ability to edit user's aliases (alias_control_admin)") # TODO translation
         unless($self->cfg('alias_control_admin') or $self->auth_has_role('globaladmin'));
 
     # Get parameters and check that values are given
     my ($address, $domain, $goto, $active) = map { $self->param($_) } qw/ address domain goto active /;
-    die "Required parameter missing" if any { !length } ($domain, $address, $goto);   # TODO user-friendly
+    return $self->_redirect_error("Required parameter missing")
+        if any { !length } ($domain, $address, $goto);   # TODO translation
 
     # Check that logged user owns domain and alias address is valid
     return $self->_render_create_error($domain, $address, $goto, 'pCreate_alias_address_text_error1')
@@ -48,10 +49,7 @@ sub create {
 
     # Convert forward destination addresses to list
     my $fwd = $goto;
-    $fwd =~ s/\r\n/,/g;
-    $fwd =~ s/\s+|^,|,$//g;
-    $fwd =~ s/,{2,}/,/g; 
-    my @gotos = uniq split /,/, $fwd;
+    my @gotos = $self->_split_commalist($goto);
 
     # Check that destinations are valid
     foreach(@gotos) {
@@ -78,7 +76,7 @@ sub create {
 
     # TODO check $goto for catchalls as well? PFA does it, I think it's bull
     my $success = try {
-        1 == $model->insert("$address\@$domain", $domain, $goto, $active)->rows;
+        1 == $model->insert("$address\@$domain", $goto, $domain, $active)->rows;
     };
     if($success) {
         $self->db_log($domain, 'create_alias', $fromto_text);
@@ -100,6 +98,33 @@ sub create {
 sub delete {
     my $self = shift;
     die "unimplemented";
+}
+
+sub edit {
+    my $self = shift;
+    my $user  = $self->auth_get_username;
+    my $model = $self->model('alias');
+    return unless $self->auth_require_role('admin');
+    die "Check ashafix.conf - domain administrators do not have the ability to edit user's aliases (alias_control_admin)" # TODO do this more user friendly?
+        unless($self->cfg('alias_control_admin') or $self->auth_has_role('globaladmin'));
+
+    # retrieve existing alias record for the user first
+    my $address = $self->param('address');
+    (my $domain = $address) =~ s'.*@'';
+
+    # TODO translation
+    $self->_redirect_error("Required parameter missing") if any { !length } ($domain, $address);
+
+    # Check the user is able to edit the domain's aliases
+    # TODO translation
+    return $self->_redirect_error("You lack permission to do this.")
+        unless($self->check_domain_owner($user, $domain) or $self->auth_has_role('globaladmin'));
+
+    my $alias = $model->get_by_address($address, $domain)->hash;
+    # TODO translation
+    return $self->_redirect_error("Invalid alias `$address'") unless(defined $alias->{address});
+
+
 }
 
 sub _alias_creation_allowed {
@@ -132,5 +157,18 @@ sub _render_create_error {
     );
 }
 
+sub _redirect_error {
+    my ($self, $error) = @_;
+    $self->flash_error($error);
+    $self->redirect_to('virtual-list');
+}
+
+sub _split_commalist {
+    my $clist = $_[1];
+    $clist =~ s/\r\n/,/g;
+    $clist =~ s/\s+|^,|,$//g;
+    $clist =~ s/,{2,}/,/g; 
+    return uniq split /,/, $clist;
+}
 1;
 
