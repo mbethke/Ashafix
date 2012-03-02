@@ -30,7 +30,7 @@
         </tr>
         [% FOREACH dprop IN domainprops.values %]
             <tr class="hilightoff" onMouseOver="className='hilighton' onMouseOut="className='hilightoff'>
-                <td><a href="list-virtual?domain=[% dprop.domain %]">[% dprop.domain %]</a></td>
+                <td><a href="[% urlfor('virtual-list', domain=dprop.domain) %]">[% dprop.domain %]</a></td>
                 <td>[% dprop.description %]</td>
                 <td>[% dprop.alias_count %] / [% dprop.aliases %]</td>
                 <td>[% dprop.mailbox_count %] / [% dprop.mailboxes %]</td>                
@@ -49,10 +49,10 @@
             <td>[% i18n(dprop.backupmx ? 'YES' : 'NO') %]</td>
             <td>[% dprop.modified %]</td>
             <td><a href="toggleactive?domain=[% dprop.domain %]">[% i18n(dprop.active ? 'YES' : 'NO') %]</a></td>
-            <td><a href="edit?domain=[% dprop.domain %]">[% i18n('edit') %]</a></td>
-            <td><a href="delete?domain=[% dprop.domain %]" onclick="return confirm('[% i18n('confirm_domain') _ h.l('pAdminList_admin_domain') _ ": " _ dprop.domain %]'">[% h.l('del') %]</a></td>
+            <td><a href="[% urlfor('domain-edit', domain=dprop.domain) %]">[% i18n('edit') %]</a></td>
+            <td><a href="[% urlfor('domain-delete', domain=dprop.domain) %]" onclick="return confirm('[% i18n('confirm_domain') _ h.l('pAdminList_admin_domain') _ ": " _ dprop.domain %]'">[% h.l('del') %]</a></td>
             </tr>
         [% END %]
    </table>
 [% END %]
-<p><a href='create-domain'>[% i18n('pAdminMenu_create_domain') %]</a>
+<p><a href="[% urlfor('create-domain') %]">[% i18n('pAdminMenu_create_domain') %]</a>
