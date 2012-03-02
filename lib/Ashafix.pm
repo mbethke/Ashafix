@@ -97,6 +97,7 @@ sub setup_routing {
                list     => 'globaladmin',
                create   => 'globaladmin',
                delete   => 'globaladmin',
+               edit     => 'globaladmin',
            },
            alias => {
                form     => 'GET#user',
@@ -117,6 +118,9 @@ sub setup_routing {
            },
            virtual => {
                list     => 'admin',
+           },
+           fetchmail => {
+               run      => 'user',
            },
         }
     );
