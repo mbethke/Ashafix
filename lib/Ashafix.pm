@@ -84,12 +84,16 @@ sub setup_routing {
     $r->namespace('Ashafix::Controller'); # we want models separated
 
     # Authentication conditions
-    $r->add_condition(login => sub { return $_[1]->auth_require_login; });
-    $r->add_condition(role  => sub { return $_[1]->auth_require_role($_[3]); });
+    $r->add_condition(login => sub { $_[1]->auth_require_login });
+    $r->add_condition(role  => sub { $_[1]->auth_require_role($_[3]) });
 
-    $r->route('/')->to('main#login')->name('login');
-    $r->route('/logout')->to('main#logout')->name('logout');
-    $r->route('/main')->over('login')->to('main#index')->name('index');
+    $r->route('/')                                       ->to('main#login')         ->name('login');
+    $r->route('/logout')                                 ->to('main#logout')        ->name('logout');
+    $r->route('/main')          ->over('login')          ->to('main#index')         ->name('index');
+    $r->route('/mailsend')      ->over('login')          ->to('misc#sendmail')      ->name('mailsend');
+    $r->route('/passwordchange')->over('login')          ->to('misc#changepassword')->name('changepassword');
+    $r->route('/backup')        ->over('role' => 'admin')->to('misc#runbackup')     ->name('runbackup');
+    $r->route('/logview')       ->over('role' => 'admin')->to('misc#viewlog')       ->name('viewlog');
 
     $self->_generic_routing(
         {
