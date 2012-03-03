@@ -7,7 +7,7 @@
    bool     can_add_mailbox
    ?        display_back_show
    ?        display_back
-   list     mailbox
+   list     mailboxes
    int      highlight_at
 
    POST variables
@@ -117,7 +117,7 @@ search results %]
    <p><a href="[% urlfor('aliasdomain-create', target_domain=domain) %]">[% i18n('pMenu_create_alias_domain') %]</a></p>
 [% END %]
 
-[% IF alias.size %]
+[% IF aliases.size %]
    <table id="alias_table">
       <tr>
          <td colspan="7"><h3>[% i18n('pOverview_alias_title') %]</h3></td>
@@ -132,7 +132,7 @@ search results %]
          <td>[% i18n('pOverview_alias_active') %]</td>
          <td colspan="2">&nbsp;</td>
       </tr>
-      [% FOREACH a IN alias %]
+      [% FOREACH a IN aliases %]
          [% alias_active = a.active ? i18n('YES') : i18n('NO') %]
          [% WRAPPER tr_highlight %]
             [% IF conf.show_status %]
@@ -168,13 +168,13 @@ search results %]
          [% END %][%# WRAPPER tr_highlight %]
       [% END %][%# FOREACH a IN alias %]
    </table>
-[% END %][%# IF alias.size %]
+[% END %][%# IF aliases.size %]
 
 [% IF can_add_alias %]
    <p><a href="[% urlfor('alias-create', domain=domain) %]">[% i18n('pMenu_create_alias') %]</a></p>
 [% END %]
 
-[% IF mailbox.size %]
+[% IF mailboxes.size %]
    <div id="nav_bar"><a name="MidArrow"></a>
    <table width=730>
       <colgroup span="1">
@@ -229,7 +229,7 @@ search results %]
          [% colspan = colspan - 6 %]
          <td colspan="[% colspan %]">&nbsp;</td>
       </tr>
-      [% FOREACH mbox IN mailbox %]
+      [% FOREACH mbox IN mailboxes %]
         [% RAWPERL %]print STDERR "mailbox\n";[% END %]
          [% WRAPPER tr_highlight %]
             [% IF conf.show_status %]
@@ -271,7 +271,7 @@ search results %]
                <td><a href="[% urlfor('alias-edit', address=mbox.username) %]">[% i18n('pOverview_alias_edit') %]</a></td>
             [% END %]
             <td><a href="[% urlfor('mailbox-edit', username=mbox.username, domain=domain) %]">[% i18n('edit') %]</a></td>
-            <td><a href="[% urlfor('mailbox-delete', mailbox=mbox.username, domain=domain) %]" onclick="return confirm([% i18n('confirm') _ i18n('pOverview_get_mailboxes') _ ': ' _ mbox.usernamei %])">[% i18n('del') %]</a></td>                                                                                         
+            <td><a href="[% urlfor('mailbox-delete', mailbox=mbox.username, domain=domain) %]" onclick="return confirm([% i18n('confirm') _ i18n('pOverview_get_mailboxes') _ ': ' _ mbox.username %])">[% i18n('del') %]</a></td>                                                                                         
          [% END %][%# WRAPPER tr_highlight %]
       [% END %]
    </table>

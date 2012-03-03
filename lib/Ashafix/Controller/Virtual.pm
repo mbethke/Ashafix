@@ -86,8 +86,8 @@ sub list {
                 map { ($_ => $self->cfg($_)) }
                 qw/ alias_control_admin vacation_control_admin used_quotas new_quota_table /
             },
-
     )->hashes;
+
     if($self->cfg('alias_control_admin')) {
         foreach my $mbox (@mailboxes) {
             $mbox->{goto_mailbox} = 0;
@@ -157,8 +157,8 @@ sub list {
         domain              => $domain,
         current_limit       => $page_size,
         domains             => \@allowed_domains,
-        mailbox             => \@mailboxes,         # TODO should be called "mailboxes"
-        alias               => \@aliases,           # TODO should be called "aliases"
+        mailboxes           => \@mailboxes,
+        aliases             => \@aliases,
         aliasdomains        => \@alias_domains,
         limit               => $limit,
         can_add_alias       => $can_add_alias,
