@@ -3,6 +3,7 @@ use feature qw/switch/;
 use Mojo::Base 'Ashafix::Controller';
 use Email::Valid;
 use Digest::MD5;
+use Try::Tiny;
 
 sub create {
     my $self = shift;
@@ -57,6 +58,11 @@ sub list {
     ); 
 }
 
+sub edit {
+    my ($self) = @_;
+    die "Unimplemented";
+}
+
 sub _create_admin {
     my ($self, $uname, $pw1, $pw2, $no_genpw, @domains) = @_;
     say "uname=$uname, pw1=$pw1, pw2=$pw2, domains='@domains'";
@@ -96,17 +102,18 @@ sub _create_admin {
 
 sub _check_email_validity {
     my ($self, $uname) = @_;
+    my $ok = 1;
 
-    eval { $self->check_email_validity($uname) }
-    if($@) {
-        chomp $@;
-        $self->show_error($@);
+    try {
+        $self->check_email_validity($uname)
+    } catch {
+        $self->show_error($_);
         $self->render(
             pAdminCreate_admin_username_text => $self->l('pAdminCreate_admin_username_text_error1')
         );
-        return;
+        $ok = 0;
     }
-    return 1;
+    return $ok;
 }
 
 sub _check_passwords {
