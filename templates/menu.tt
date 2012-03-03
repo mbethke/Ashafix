@@ -5,14 +5,21 @@
 END %]
 
 [%# Create a menu link with a real URL %]
-[% MACRO menulink(href, title, submenu) BLOCK %]
-    [% ttloc = i18n(title); li = '<li><a target="_top" href="' _ href _ '">' _ ttloc _ '</a>' %]
-    [% GET li %]
-    [% IF submenu %]
-        <ul>[% GET li %]</li>[% submenu %]</ul>
-    [% END %]
-    </li>
-[% END %]
+[% MACRO menulink(href, title, submenu) BLOCK;
+    ttloc = i18n(title);
+    GET '<li><a target="_top" href="' _ href _ '">' _ ttloc _ '</a>';
+    IF submenu;
+        GET '<ul>' _ submenu _ '</ul>';
+    END;
+    GET '</li>';
+# The following is the more redundant variety implemented in Postfixadmin
+#    menulink_li = '<li><a target="_top" href="' _ href _ '">' _ ttloc _ '</a>';
+#    GET menulink_li;
+#    IF submenu;
+#        GET '<ul>' _ menulink_li _ '</li>' _ submenu _ '</ul>';
+#    END;
+#    GET '</li>';
+END %]
 
 [%# Resolve symbolic URL and append a "?domain=..." parameter if get_domain is set %]
 [% MACRO domurl(route) BLOCK;
@@ -40,41 +47,40 @@ END %]
     END;
 END %]
 
-[% IF c.session.user.roles.globaladmin %]
-    [% submenu_domain   = BLOCK; menulinknamed('domain-create', 'pAdminMenu_create_domain');    END %]
-    [% submenu_sendmail = BLOCK; menulinknamed('message-send', 'pAdminMenu_broadcast_message'); END %]
-    [% submenu_admin    = BLOCK; menulinknamed('admin-create', 'pAdminMenu_create_admin');      END %]
-    [% menulinknamed('admin-list', 'pAdminMenu_list_admin', submenu_admin) %]
-[% ELSE %]
-    [% submenu_domain = ''; submenu_sendmail = '' %]
-    [% menulinknamed('index', 'pMenu_main') %]
-[% END %]
+[% IF c.session.user.roles.globaladmin;
+    submenu_domain   = BLOCK; menulinknamed('domain-create', 'pAdminMenu_create_domain');     END;
+    submenu_sendmail = BLOCK; menulinknamed('message-send',  'pAdminMenu_broadcast_message'); END;
+    submenu_admin    = BLOCK; menulinknamed('admin-create',  'pAdminMenu_create_admin');      END;
+    menulinknamed('admin-list', 'pAdminMenu_list_admin', submenu_admin);
+ELSE;
+    submenu_domain = ''; submenu_sendmail = '';
+    menulinknamed('index', 'pMenu_main');
+END %]
 
 [% menulinknamed('domain-list', 'pAdminMenu_list_domain', submenu_domain) %]
+
 [% IF c.session('list_virtual_sticky_domain');
-        SET url = urlfor('virtual-list', domain=c.session('list_virtual_sticky_domain'));
+    	SET virtdom_url = urlfor('virtual-list', domain=c.session('list_virtual_sticky_domain'));
     ELSE;
-        SET url = urlfor('virtual-list');
+        SET virtdom_url = urlfor('virtual-list');
 END;
-menulink(url, 'pAdminMenu_list_virtual', submenu_virtual) %]
+menulink(virtdom_url, 'pAdminMenu_list_virtual', submenu_virtual) %]
 
-[% IF conf.fetchmail %]
-    [% submenu_fetchmail = BLOCK; menulinknamed('fetchmail-run', 'pFetchmail_new_entry'); END %]
-    [% menulinknamed('fetchmail-run', 'pMenu_fetchmail', submenu_fetchmail) %]
-[% END %]
+[% IF conf.fetchmail;
+    submenu_fetchmail = BLOCK; menulinknamed('fetchmail-new', 'pFetchmail_new_entry'); END;
+    menulinknamed('fetchmail-run', 'pMenu_fetchmail', submenu_fetchmail);
+END %]
 
-[% IF conf.sendmail %]
-    [% menulinknamed('mail-send', 'pMenu_sendmail', submenu_sendmail) %]
-[% END %]
+[% IF conf.sendmail; menulinknamed('mailsend', 'pMenu_sendmail', submenu_sendmail); END %]
 
-[% menulinknamed('password-change', 'pMenu_password') %]
+[% menulinknamed('passwordchange', 'pMenu_password') %]
 
 [%# TODO if !pgsql %]
-[% IF user.roles.globaladmin and conf.backup %]
-   [% menulinknamed('backup-run', 'pAdminMenu_backup') %]
-[% END %]
+[% IF user.roles.globaladmin and conf.backup;
+   menulinknamed('backup', 'pAdminMenu_backup');
+END %]
 
-[% menulinknamed('log-view', 'pMenu_viewlog') %]
+[% menulinknamed('logview', 'pMenu_viewlog') %]
 [% menulinknamed('logout', 'pMenu_logout') %]
 
 </ul>
