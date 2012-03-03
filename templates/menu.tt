@@ -6,10 +6,10 @@ END %]
 
 [%# Create a menu link with a real URL %]
 [% MACRO menulink(href, title, submenu) BLOCK %]
-    [% ttloc = i18n(title) %]
-    <li><a target="_top" href="[% href %]">[% ttloc %]</a>
+    [% ttloc = i18n(title); li = '<li><a target="_top" href="' _ href _ '">' _ ttloc _ '</a>' %]
+    [% GET li %]
     [% IF submenu %]
-        <ul><li><a target="_top" href="[% href %]">[% ttloc %]</a></li>[% submenu %]</ul>
+        <ul>[% GET li %]</li>[% submenu %]</ul>
     [% END %]
     </li>
 [% END %]
