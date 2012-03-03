@@ -53,7 +53,7 @@ if (file_exists (realpath ("../".$CONF['theme_css']))) {
 
 <div id="login_header">
 <img id="login_header_logo" src="[% urlfor('/') _ conf.theme_logo %]" alt="logo" />
-[% IF conf.show_header_text.defined and conf.header_text.defined %]
+[% IF conf.show_header_text and conf.header_text.defined %]
     <h2>[% conf.header_text %]</h2>
 [% END %]
 </div>

@@ -171,10 +171,10 @@ sub list {
         search              => $search,
         #int      highlight_at
     );
-    foreach my $m (@{$renderargs{mailbox}}) {
-        foreach(sort keys %$m) { print "$_ => $m->{$_}\n" }
-        print "\n";
-    }
+#    foreach my $m (@{$renderargs{mailbox}}) {
+#        foreach(sort keys %$m) { print "$_ => $m->{$_}\n" }
+#        print "\n";
+#    }
     
     $self->render(%renderargs
     );

@@ -1,17 +1,22 @@
 package Ashafix::Controller::Misc;
 use Mojo::Base 'Ashafix::Controller';
 
-sub sendmail {
+sub send_mail {
     my $self = shift;
     die "unimplemented";
 }
 
-sub password {
+sub change_password {
     my $self = shift;
     die "unimplemented";
 }
 
-sub viewlog {
+sub view_log {
+    my $self = shift;
+    die "unimplemented";
+}
+
+sub run_backup {
     my $self = shift;
     die "unimplemented";
 }
