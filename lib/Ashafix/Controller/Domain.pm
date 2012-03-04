@@ -2,12 +2,11 @@ package Ashafix::Controller::Domain;
 use Mojo::Base 'Ashafix::Controller';
 use Email::Valid;
 use HTML::Entities;
-use Data::Dumper;
+use Try::Tiny;
 
 sub create {
     my $self = shift;
     my $conf = $self->stash('conf');
-    print Dumper($conf);
     my %params;
     my %defaults = (
         'domain'         => [ undef ],
@@ -62,7 +61,7 @@ sub create {
     }
 
     # TODO differentiate between failure here and in the previous step
-    if (!$self->_postcreation($params{domain}))
+    if(!$self->_postcreation($params{domain}))
     {
          return $self->render(%params,
              message => $self->l('pAdminCreate_domain_error')
@@ -142,17 +141,22 @@ sub list {
 sub _check_domain {
     my ($self, $domain) = @_;
     my $val = Email::Valid->new;
+    my $ok = 1;
     # Check valid TLD
     unless($val->tld("foo\@$domain")) {
         $self->show_error(sprintf($self->l('pInvalidDomainRegex'), encode_entities($domain)));
         return;
     }
     # Check working DNS lookup
-    if($self->stash('conf')->{emailcheck_resolve_domain} and !$val->mx($domain)) {
-        $self->show_error(sprintf($self->l('pInvalidDomainDNS'), encode_entities($domain)));
-        return;
+    if($self->stash('conf')->{emailcheck_resolve_domain}) {
+        try {
+            $val->mx($domain) or die "unresolvable";
+        } catch {
+            $self->show_error(sprintf($self->l('pInvalidDomainDNS'), encode_entities($domain)) . ": $_");
+            $ok = 0;
+        }
     }
-    return 1;
+    return $ok;
 }
 
 sub _domain_exists {
