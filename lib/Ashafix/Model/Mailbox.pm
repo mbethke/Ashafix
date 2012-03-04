@@ -21,6 +21,7 @@ use base 'Ashafix::Model::Base';
 
 our %queries = (
     check_mailbox           => "SELECT 1 FROM %table_mailbox WHERE username=? AND domain=?",
+    get_password            => "SELECT password FROM %table_mailbox WHERE username=?",
     count_domain_mailboxes  => "SELECT COUNT(*) FROM %table_mailbox WHERE domain=?",
     get_domain_quota        => "SELECT SUM(quota) FROM %table_mailbox WHERE domain=?",
     delete_by_username      => "DELETE FROM %table_mailbox WHERE username=? AND domain=?",

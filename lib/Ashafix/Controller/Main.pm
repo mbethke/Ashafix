@@ -19,8 +19,10 @@ sub login {
         supported_languages => Ashafix::I18N::supported_languages
     ) unless defined $name and defined $pass;
 
-    my $stored_pass = $self->model('admin')->get_password($name)->list;
-    if($self->app->pacrypt($pass, $stored_pass) eq $stored_pass) {
+    my $stored_pass = $self->_find_password($name);
+    if(defined $stored_pass and
+        $self->app->pacrypt($pass, $stored_pass) eq $stored_pass)
+    {
         # Login successful
         $self->session('user', { name => $name, roles => { 'admin' => 1 }});
         # Check for global admin
@@ -38,5 +40,12 @@ sub logout {
     $self->session(expires => 1); # invalidate
     $self->redirect_to('index');
 };
+
+sub _find_password {
+    my ($self, $user) = @_;
+    my $pass = $self->model('admin')->get_password($user)->list;
+    return $pass if defined $pass;
+    return $self->model('mailbox')->get_password($user)->list;
+}
 
 1;

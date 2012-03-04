@@ -29,9 +29,6 @@
             [% tMessage %]
       </td>
    </tr>
-   <tr>
-      <td colspan="2"><a href="users/">[% i18n('pLogin_login_users') %]</a></td>
-   </tr>
 </table>
 </form>
 
