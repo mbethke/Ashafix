@@ -18,7 +18,7 @@ use strict;
 use warnings;
 use Mojo::Base 'Ashafix::Controller::MailAddress';
 use List::MoreUtils qw/ any /;
-use MIME::Lite;
+use Try::Tiny;
 
 sub delete {
     my $self = shift;
@@ -84,7 +84,7 @@ sub create {
         when('POST') {
             ($username, $domain, $pass1, $pass2, $name, $quota, $active, $send_mail) =
             map { $self->param($_) // '' }
-            qw /username domain password password2 name quota active send_mail/;
+            qw/ username domain password password2 name quota active send_mail /;
             $username = lc $username;
             $domain   = lc $domain;
             my $username_dom = "$username\@$domain";
@@ -190,6 +190,16 @@ sub create {
 
 sub _welcome_mail {
     my ($self, $to) = @_;
+    my $ok = 1;
+
+    try {
+        eval "use MIME::Lite";
+        die if $@;
+    } catch {
+        $self->show_error($self->l('pSendmail_result_error') . "(module MIME::Lite not installed)");
+        $ok = 0
+    };
+    return unless $ok;
 
     my $msg = MIME::Lite->new(
         From    => $self->cfg('admin_email') || $self->auth_get_username,
@@ -198,18 +208,15 @@ sub _welcome_mail {
         Type    => 'text/plain',
         Data    => $self->cfg('welcome_text'), 
     );
-    eval {
+    try {
         $msg->send('smtp', $self->cfg('smtp_server') || 'localhost',
             Port    => $self->cfg('smtp_port') || 25,
             Timeout => 30,
         );
-    };
-    if($@) {
-        chomp $@;
-        $self->show_error($self->l('pSendmail_result_error') . "($@)");
-    } else {
         $self->show_info($self->l('pSendmail_result_success'));
-    }
+    } catch {
+        $self->show_error($self->l('pSendmail_result_error') . "($_)");
+    };
 }
 
 sub _allowed_quota {
