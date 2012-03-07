@@ -22,7 +22,9 @@ use base 'Ashafix::Model::Base';
 our %queries = (
     check_mailbox           => "SELECT 1 FROM %table_mailbox WHERE username=? AND domain=?",
     get_password            => "SELECT password FROM %table_mailbox WHERE username=?",
-    count_domain_mailboxes  => "SELECT COUNT(*) FROM %table_mailbox WHERE domain=?",
+    get_mailbox_data        => "SELECT * FROM %table_mailbox WHERE username=? AND domain=?",
+    update                  => "UPDATE %table_mailbox SET quota=?,local_part=?,name=?,active=?,password=? WHERE username=? AND domain=?",
+ count_domain_mailboxes  => "SELECT COUNT(*) FROM %table_mailbox WHERE domain=?",
     get_domain_quota        => "SELECT SUM(quota) FROM %table_mailbox WHERE domain=?",
     delete_by_username      => "DELETE FROM %table_mailbox WHERE username=? AND domain=?",
     delete_by_domain        => "DELETE FROM %table_mailbox WHERE domain=?",

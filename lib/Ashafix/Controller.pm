@@ -183,7 +183,7 @@ sub check_email_validity {
         when('mxcheck') { $err = 'pInvalidDomainDNS'   }
         default         { $err = 'pInvalidMailRegex'   }
     }
-    die sprintf($self->l($err), $domainpart) . "\n";    #TODO user-friendly
+    die $self->l($err) . ": $uname / $domainpart";    #TODO user-friendly
 }
 
 sub check_alias_owner { 

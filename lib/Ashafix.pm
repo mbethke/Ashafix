@@ -116,15 +116,18 @@ sub setup_routing {
            domainalias => {
                delete   => 'globaladmin',
            },
+           fetchmail => {
+               run      => 'user',
+           },
            mailbox => {
-               create   => 'admin',
+               form     => 'GET#admin',
+               create   => 'POST#admin',
+               edit     => 'POST#admin',
+               editform => 'GET#admin',
                delete   => 'admin',
            },
            virtual => {
                list     => 'admin',
-           },
-           fetchmail => {
-               run      => 'user',
            },
         }
     );

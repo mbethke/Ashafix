@@ -88,8 +88,7 @@ search results %]
                [% WRAPPER tr_highlight %]
                   <td><a href="[% urlfor('', domain=adom.alias_domain, limit=current_limit) %]">[% adom.alias_domain %]</a></td>
                   <td>[% adom.modified %]</td>
-                  [%# TODO: change all edit scripts not to require the domain parameter (and extract it from the address). This avoids superflous problems when using search. %]
-
+                  [%# TODO: change all edit scripts not to require the domain parameter and extract it from the address. This avoids unnecessary problems when using search. %]
                   [%# TODO puke %]
                   <td><a href="[% urlfor('aliasdomain-edit-active', alias_domain=true, domain=adom.alias_domain, return=returnto) %]">[% adom.active ? i18n('YES') : i18n('NO') %]</a></td>
                   <td><a href="[% urlfor('alias-domain-delete', domain=adom.alias_domain) %]" onclick="return confirm('[% i18n('confirm') _ i18n('pOverview_get_alias_domains') _ ": " _ adom.alias_domain %]')">[% i18n('del') %]</a></td>
@@ -270,7 +269,7 @@ search results %]
                   (    c.auth_has_role('globaladmin') and conf.alias_control) %]
                <td><a href="[% urlfor('alias-edit', address=mbox.username) %]">[% i18n('pOverview_alias_edit') %]</a></td>
             [% END %]
-            <td><a href="[% urlfor('mailbox-edit', username=mbox.username, domain=domain) %]">[% i18n('edit') %]</a></td>
+            <td><a href="[% urlfor('mailbox-editform', username=mbox.username, domain=domain) %]">[% i18n('edit') %]</a></td>
             <td><a href="[% urlfor('mailbox-delete', mailbox=mbox.username, domain=domain) %]" onclick="return confirm([% i18n('confirm') _ i18n('pOverview_get_mailboxes') _ ': ' _ mbox.username %])">[% i18n('del') %]</a></td>                                                                                         
          [% END %][%# WRAPPER tr_highlight %]
       [% END %]
@@ -282,7 +281,7 @@ search results %]
 [% END %]
 
 [% IF can_add_mailbox %]
-   <p><a href="[% urlfor('mailbox-create', domain=domain) %]">[% i18n('pMenu_create_mailbox') %]</a></p>
+   <p><a href="[% urlfor('mailbox-form', domain=domain) %]">[% i18n('pMenu_create_mailbox') %]</a></p>
 [% END %]
 
 [% IF conf.show_status and conf.show_status_key %]

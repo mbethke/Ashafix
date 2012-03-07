@@ -25,11 +25,11 @@ BLOCK tr_highlight -%]
 
 [%- # Create a <select> list
 MACRO gen_select(name, options, active, selectattr) BLOCK -%]
-    <select name="[% name %]"[% selectattr.defined ? ' ' _ selectattr : '' %]>
-        [%- FOREACH o IN options %]
-            <option value="[% o %]"[% o == active ? ' selected="selected"' : '' %]>[% o %]</option>
-        [% END %]
-    </select>
+<select name="[%- name -%]"[%- selectattr.defined ? ' ' _ selectattr : '' -%]>
+        [%- FOREACH o IN options -%]
+            <option value="[%- o -%]"[%- o == active ? ' selected="selected"' : '' -%]>[%- o -%]</option>
+        [%- END -%]
+</select>
 [%- END -%]
 
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"

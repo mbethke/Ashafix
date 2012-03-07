@@ -37,7 +37,7 @@ END %]
 [% get_domain = c.req.url.query.param('domain') %]
 
 [% submenu_virtual = BLOCK;
-    durl = domurl('mailbox-create');
+    durl = domurl('mailbox-form');
     menulinknamed(durl, 'pMenu_create_mailbox');
     durl = domurl('alias-form');
     menulink(durl, 'pMenu_create_alias');
