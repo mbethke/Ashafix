@@ -25,9 +25,19 @@ BLOCK tr_highlight -%]
 
 [%- # Create a <select> list
 MACRO gen_select(name, options, active, selectattr) BLOCK -%]
-<select name="[%- name -%]"[%- selectattr.defined ? ' ' _ selectattr : '' -%]>
+<select name="[% name %]"[% selectattr.defined ? ' ' _ selectattr : '' %]>
         [%- FOREACH o IN options -%]
-            <option value="[%- o -%]"[%- o == active ? ' selected="selected"' : '' -%]>[%- o -%]</option>
+            <option value="[% o %]"[% ' selected="selected"' IF o == active %]>[% o %]</option>
+        [%- END -%]
+</select>
+[%- END -%]
+
+[%- # Create a <select> list where name and value of options are key and value
+    # in a hash. "active" has to specify the respective entry's key.
+MACRO gen_select_hash(name, options, active, selectattr) BLOCK -%]
+<select name="[% name %]"[% selectattr.defined ? ' ' _ selectattr : '' %]>
+        [%- FOREACH pair IN options -%]
+            <option value="[% pair.key %]"[% ' selected="selected"' IF pair.key == active %]>[% pair.value %]</option>
         [%- END -%]
 </select>
 [%- END -%]
@@ -47,7 +57,7 @@ if (file_exists (realpath ("../".$CONF['theme_css']))) {
 %]
 <link rel="stylesheet" type="text/css" href="[% urlfor('/') _ conf.theme_css %]" />
 
-<title>Postfix Admin - [% c.req.headers.host %]</title>
+<title>Ashafix &mdash; [% c.req.headers.host %]</title>
 </head>
 <body>
 

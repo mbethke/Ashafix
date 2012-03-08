@@ -14,11 +14,7 @@
     </tr>
     <tr>
         <td colspan="2">
-            <select name="lang" xml:lang="en" dir="ltr">
-            [% FOREACH langpair IN supported_languages %]
-                <option value="[% langpair.key %]"[% ' selected="selected"' IF langpair.key == h.languages %]>[% langpair.value %]</option>
-            [% END %]
-            </select>
+            [%- gen_select_hash('lang', supported_languages, h.languages, 'xml:lang="en" dir="ltr"') -%]
         </td>
    </tr>
    <tr>
