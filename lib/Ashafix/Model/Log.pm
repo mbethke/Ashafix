@@ -17,7 +17,7 @@ package Ashafix::Model::Log;
 
 use strict;
 use warnings;
-use base 'Ashafix::Model::Base';
+use parent 'Ashafix::Model::Base';
 
 our %queries = (
     delete              => "DELETE FROM %table_log WHERE domain=?",

@@ -16,7 +16,7 @@ package Ashafix::Model::Quota;
 use 5.010;
 use strict;
 use warnings;
-use base 'Ashafix::Model::Base';
+use parent 'Ashafix::Model::Base';
 
 our %queries = (
     find_by_user_old    => "SELECT * FROM %table_quota WHERE username=?",

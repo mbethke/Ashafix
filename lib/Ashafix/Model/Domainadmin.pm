@@ -17,7 +17,7 @@ package Ashafix::Model::Domainadmin;
 
 use strict;
 use warnings;
-use base 'Ashafix::Model::Base';
+use parent 'Ashafix::Model::Base';
 
 our %queries = (
     select_domain_count => "SELECT count(*) FROM %table_domain_admins WHERE username=? AND domain='ALL'",

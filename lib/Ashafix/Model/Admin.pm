@@ -17,7 +17,7 @@ package Ashafix::Model::Admin;
 
 use strict;
 use warnings;
-use base 'Ashafix::Model::Base';
+use parent 'Ashafix::Model::Base';
 
 our %queries = (
     get_password        => "SELECT password FROM %table_admin WHERE username=? AND active='1'",

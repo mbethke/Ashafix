@@ -17,7 +17,7 @@ package Ashafix::Model::Alias;
 
 use strict;
 use warnings;
-use base 'Ashafix::Model::Base';
+use parent 'Ashafix::Model::Base';
 
 our %queries = (
     get_by_address          => "SELECT * FROM %table_alias WHERE address=? AND domain=?",

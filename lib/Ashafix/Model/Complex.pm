@@ -17,7 +17,7 @@ package Ashafix::Model::Complex;
 
 use strict;
 use warnings;
-use base 'Ashafix::Model::Base';
+use parent 'Ashafix::Model::Base';
 use Ashafix::Model;
 
 our %queries = (

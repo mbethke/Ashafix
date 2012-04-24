@@ -16,7 +16,7 @@ package Ashafix::Model::Aliasdomain;
 
 use strict;
 use warnings;
-use base 'Ashafix::Model::Base';
+use parent 'Ashafix::Model::Base';
 
 our %queries = (
     delete_by_alias     => "DELETE FROM %table_alias_domain WHERE alias_domain=?",

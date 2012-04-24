@@ -17,7 +17,7 @@ package Ashafix::Model::Domain;
 
 use strict;
 use warnings;
-use base 'Ashafix::Model::Base';
+use parent 'Ashafix::Model::Base';
 
 our %queries = (
     check_domain        => "SELECT 1 FROM %table_domain WHERE domain=?",

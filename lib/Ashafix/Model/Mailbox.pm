@@ -17,7 +17,7 @@ package Ashafix::Model::Mailbox;
 
 use strict;
 use warnings;
-use base 'Ashafix::Model::Base';
+use parent 'Ashafix::Model::Base';
 
 our %queries = (
     check_mailbox           => "SELECT 1 FROM %table_mailbox WHERE username=? AND domain=?",

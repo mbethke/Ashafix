@@ -16,7 +16,7 @@ package Ashafix::Model::Vacation;
 use 5.010;
 use strict;
 use warnings;
-use base 'Ashafix::Model::Base';
+use parent 'Ashafix::Model::Base';
 
 our %queries = (
     check_by_mbox   => 'SELECT 1 FROM %table_vacation WHERE email=? AND domain=?',
