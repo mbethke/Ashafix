@@ -34,6 +34,9 @@ sub setup_plugins {
     # Helper for quick config access
     $self->helper(cfg => sub { $_[0]->stash('conf')->{$_[1]} });
 
+    # Cross Site Request Forgery protection
+    $self->plugin('Mojolicious::Plugin::CSRFDefender');
+    
     # Load Template Toolkit and set as default
     $self->plugin(
         tt_renderer => {
