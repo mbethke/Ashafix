@@ -37,15 +37,15 @@ search results %]
 
 
 [% MACRO show_back_up_next(anchor) BLOCK %]
-   [% _anchor = anchor.defined ? '#' _ anchor : '' %]
+   [% IF anchor != ''; _anchor = '#' _ anchor; ELSE; _anchor = ''; END%]
    [% IF display_back_show %]
-      <a href="[% urlfor('', domain=domain, limit=display_back) _ anchor %]"><img border="0" src="[% urlfor('/images/arrow-l.png') %]" title="[% i18n('pOverview_left_arrow') %]" alt="[% i18n('pOverview_left_arrow') %]" /></a>
+      <a href="[% urlfor('', domain=domain, limit=display_back) _ _anchor %]"><img border="0" src="[% urlfor('/images/arrow-l.png') %]" title="[% i18n('pOverview_left_arrow') %]" alt="[% i18n('pOverview_left_arrow') %]" /></a>
    [% END %]
    [% IF display_up_show %]
-      <a href="[% urlfor('', domain=domain, limit=0) _ anchor %]"><img border="0" src="[% urlfor('/images/arrow-u.png') %]" title="[% i18n('pOverview_up_arrow') %]" alt="[% i18n('pOverview_up_arrow') %]" /></a>
+      <a href="[% urlfor('', domain=domain, limit=0) _ _anchor %]"><img border="0" src="[% urlfor('/images/arrow-u.png') %]" title="[% i18n('pOverview_up_arrow') %]" alt="[% i18n('pOverview_up_arrow') %]" /></a>
    [% END %]
    [% IF display_next_show %]
-      <a href="[% urlfor('', domain=domain, limit=display_next) _ anchor %]"><img border="0" src="[% urlfor('/images/arrow-r.png') %]" title="[% i18n('pOverview_right_arrow') %]" alt="[% i18n('pOverview_right_arrow') %]" /></a>
+      <a href="[% urlfor('', domain=domain, limit=display_next) _ _anchor %]"><img border="0" src="[% urlfor('/images/arrow-r.png') %]" title="[% i18n('pOverview_right_arrow') %]" alt="[% i18n('pOverview_right_arrow') %]" /></a>
    [% END %]
 [% END %]
 

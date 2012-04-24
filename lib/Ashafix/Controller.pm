@@ -179,11 +179,12 @@ sub check_email_validity {
     my $err;
     (my $domainpart = $uname) =~ s/.*\@//;
     given($mvalid->details) {
-        when('fqdn')    { $err = 'pInvalidDomainRegex' }
-        when('mxcheck') { $err = 'pInvalidDomainDNS'   }
-        default         { $err = 'pInvalidMailRegex'   }
+        when('fqdn')    { $err = sprintf($self->l('pInvalidDomainRegex'), $domainpart) }
+        when('mxcheck') { $err = sprintf($self->l('pInvalidDomainDNS'), $domainpart)   }
+        default         { $err = $self->l('pInvalidMailRegex') . ": `$uname'"  }
     }
-    die $self->l($err) . ": $uname / $domainpart";    #TODO user-friendly
+    $self->show_error($err);
+    return;
 }
 
 sub check_alias_owner { 
