@@ -13,17 +13,12 @@
         <td><input class="flat" type="password" name="fPassword" /></td>
     </tr>
     <tr>
-        <td colspan="2">
-            [%- gen_select_hash('lang', supported_languages, h.languages, 'xml:lang="en" dir="ltr"') -%]
-        </td>
+        <td colspan="2" class="hlp_center"><input class="button" type="submit" name="submit" value="[% i18n('pLogin_button') %]" /></td>
    </tr>
    <tr>
-      <td colspan="2" class="hlp_center"><input class="button" type="submit" name="submit" value="[% i18n('pLogin_button') %]" /></td>
-   </tr>
-   <tr>
-      <td colspan="2" class="standout">
+        <td colspan="2" class="standout">
             [% tMessage %]
-      </td>
+        </td>
    </tr>
 </table>
 </form>
