@@ -27,7 +27,7 @@ sub login {
         # TODO how to check for admin vs. user?
         $self->session('user', { name => $name, roles => { 'admin' => 1 }});
         # Check for global admin
-        $self->session('user')->{roles}{globaladmin} = $self->_check_global_admin;
+        $self->session('user')->{roles}{globaladmin} = $self->_check_global_admin($name);
         $self->redirect_to('index');
     } else {
         # Login failed
@@ -48,6 +48,6 @@ sub _find_password {
     return $self->model('mailbox')->get_password($user)->list;
 }
 
-sub _check_global_admin { defined $self->model('domainadmin')->check_global_admin($name)->list }
+sub _check_global_admin { defined $_[0]->model('domainadmin')->check_global_admin($_[1])->list }
 
 1;
