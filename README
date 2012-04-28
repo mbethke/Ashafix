@@ -9,6 +9,8 @@ This is very much a work in progress. Currently a lot of functionality is still
 missing but basic functions such as creating/editing/deleting domains and
 mailboxes are there.
 
+Homepage: http://ashafix.net/
+
 Notes:
 
 - Requires at least version 2.3 of the database, particularly regarding domain entries for global admins in the domainadmin table.
