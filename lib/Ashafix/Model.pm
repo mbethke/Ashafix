@@ -21,8 +21,10 @@ use DBIx::Simple;
 use SQL::Abstract;
 use Carp qw/ croak /;
 use Mojo::Loader;
+use Try::Tiny;
 
 my $DB;
+my @connectargs;
 
 sub new {
     my $class = shift;
@@ -35,18 +37,9 @@ sub new {
     my $self = bless {}, $class;
 
     unless($DB) {
-        $DB = DBIx::Simple->connect(@config{qw/dsn user password/},
-            {
-                RaiseError => 1,
-                #keep_statements => 64,
-            }
-        ) or die DBIx::Simple->error;
-        $DB->abstract = SQL::Abstract->new(
-            case => 'lower',
-            logic => 'and',
-            convert => 'upper'
-        );
-
+        @connectargs = @config{qw/dsn user password/};
+        $DB = _connect(@connectargs);
+        
         my $modules = [
             grep { !/^Ashafix::Model::Base$/ } @{Mojo::Loader->search('Ashafix::Model')}
         ];
@@ -68,13 +61,37 @@ sub model {
 
 # Regular function, proxies $DB->query to simplify debugging
 sub query {
-    print STDERR "QUERY: $_[0] ", ($#_ >=1 ? "[@_[1 .. $#_]]" : ''), "\n";
-    $DB->query(@_);
+    my @query = @_;
+    print STDERR "QUERY: $query[0] ", ($#query >=1 ? "[@query[1 .. $#query]]" : ''), "\n";
+    try {
+        $DB->query(@query);
+    } catch {
+        # Reconnect and retry upon loss of connection
+        # TODO is this exception message the same for Postgres?
+        /server has gone away/ and $DB = _connect(@connectargs);
+        $DB->query(@query);
+    };
 }
 
 # Transaction support
 sub begin    { $DB->begin } 
 sub commit   { $DB->commit }
 sub rollback { $DB->rollback }
+
+# Set up module-global connection handle. Not a method!
+sub _connect {
+    my $db = DBIx::Simple->connect(@_,
+        {
+            RaiseError => 1,
+            #keep_statements => 64,
+        }
+    ) or die DBIx::Simple->error;
+    $db->abstract = SQL::Abstract->new(
+        case => 'lower',
+        logic => 'and',
+        convert => 'upper'
+    );
+    return $db;
+}
 
 1;
