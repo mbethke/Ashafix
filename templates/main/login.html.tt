@@ -23,7 +23,7 @@
 </table>
 </form>
 
-<script tyle="text/javascript"><!--
+<script style="text/javascript"><!--
 	document.login.fUsername.focus();
 // -->
 </script>
