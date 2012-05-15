@@ -43,6 +43,7 @@ sub logout {
 
 sub _find_password {
     my ($self, $user) = @_;
+    return unless defined $user;
     my $pass = $self->model('admin')->get_password($user)->list;
     return $pass if defined $pass;
     return $self->model('mailbox')->get_password($user)->list;
