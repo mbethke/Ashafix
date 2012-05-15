@@ -6,7 +6,7 @@ use Try::Tiny;
 
 sub create {
     my $self = shift;
-    my $conf = $self->stash('conf');
+    my $conf = $self->stash('config');
     my %params;
     my %defaults = (
         'domain'         => [ undef ],
@@ -84,7 +84,7 @@ sub delete {
     $self->model('mailbox')->delete_by_domain($domain);
     $self->model('aliasdomain')->delete_by_alias($domain);
     $self->model('log')->delete($domain);
-    $self->model('vacation')->delete_by_domain($domain) if $self->stash('conf')->{vacation};
+    $self->model('vacation')->delete_by_domain($domain) if $self->stash('config')->{vacation};
 
     # Finally delete the main entry
     my $rows = $self->model('domain')->delete($domain)->rows;
@@ -148,7 +148,7 @@ sub _check_domain {
         return;
     }
     # Check working DNS lookup
-    if($self->stash('conf')->{emailcheck_resolve_domain}) {
+    if($self->stash('config')->{emailcheck_resolve_domain}) {
         try {
             $val->mx($domain) or die "unresolvable";
         } catch {
@@ -166,7 +166,7 @@ sub _domain_exists {
 
 sub _postcreation {
     my ($self, $domain) = @_;
-    my $script = $self->stash('conf')->{domain_postcreation_script} or return 1;
+    my $script = $self->stash('config')->{domain_postcreation_script} or return 1;
 
     unless(length $domain) {
         # TODO localize

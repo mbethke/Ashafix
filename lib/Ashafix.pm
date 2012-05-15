@@ -39,16 +39,10 @@ sub startup {
 sub setup_plugins {
     my $self = shift;
 
-    # Load config
-    $self->plugin(
-        Config => {
-            file      => 'ashafix.conf',
-            stash_key => 'conf'
-        }
-    );
-
+    # Load config, keep a copy of the data structure for now
+    my $config = $self->plugin(Config => {file => 'ashafix.conf' });
     # Helper for quick config access
-    $self->helper(cfg => sub { $_[0]->stash('conf')->{$_[1]} });
+    $self->helper(cfg => sub { $_[0]->stash('config')->{$_[1]} });
 
     # Cross Site Request Forgery protection
     $self->plugin('Mojolicious::Plugin::CSRFDefender');
@@ -77,7 +71,7 @@ sub setup_plugins {
     $self->controller_class('Ashafix::Controller');
 
     # Setup signed sessions
-    $self->app->secret($self->app->defaults->{conf}{secret});
+    $self->app->secret($config->{secret});
     #$self->sessions->cookie_domain('localhost');    # TODO configurable
     $self->sessions->cookie_name('ashafix');
 
