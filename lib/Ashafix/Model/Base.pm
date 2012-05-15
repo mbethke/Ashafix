@@ -45,7 +45,7 @@ sub sql_in_clause_bindparams {
 sub _edit_sql {
     local $_ = $_[0];
     s/%table_(\w+)/$_[1]->{$1}/eg;
-    s/\n//g;
+    s/\n/ /g;
     s/\s\s*/ /g;
     return $_;
 }
