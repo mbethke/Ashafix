@@ -1,0 +1,5 @@
+[% returnto = urlfor('', domain=domain, limit=current_limit) %]
+<td><a href="[% urlfor('toggleactive', alias=a.address, domain=domain, return=returnto) %]">[% alias_active %]</a></td>
+<td><a href="[% urlfor('alias-edit', address=a.address) %]">[% i18n('edit') %]</a></td>
+<td><a href="[% urlfor('alias-delete', alias=a.address, domain=domain) %]" onclick="return confirm('[% i18n('confirm') _ i18n('pOverview_get_aliases') _ ": " _ $a.address %]')">[% i18n('del') %]</a></td>
+

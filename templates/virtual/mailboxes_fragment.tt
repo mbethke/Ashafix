@@ -1,0 +1,61 @@
+<div id="nav_bar"><a name="MidArrow"></a>
+<table width=730>
+   <colgroup span="1">
+      <col width="550"></col>
+   </colgroup>
+   <tr>
+      <td align=left>
+      [% IF limit.mbox_pgindex_count -%]
+         <b>[% i18n('pOverview_mailbox_title') %]</b>&nbsp;&nbsp;
+         [%- highlight_at = display_back_show == 1 ? display_back / (conf.page_size + 1) : 0 -%]
+         [%- FOREACH i IN [ 0 .. limit.mbox_pgindex_count ];
+            link_limit = i * conf.page_size -%]
+            <a href="[% urlfor('', domain=domain, limit=link_limit) _ '#MidArrow' %]">
+            [%- IF i == highlight_at -%]
+               <b>[% limit.mbox_pgindex.$i %]</b>
+            [%- ELSE -%]
+               [% limit.mbox_pgindex.$i %]
+            [%- END -%]
+         [%- END -%]
+      [%- END %]
+      </td>
+      <td valign="middle" align="right">
+         [% show_back_up_next %]
+      </td>
+   </tr>
+</table>
+</div>
+
+[% colspan = 8;
+   IF conf.vacation_control_admin; colspan = colspan + 1; END;
+   IF conf.alias_control_admin;    colspan = colspan + 1; END;
+   IF display_mailbox_aliases;     colspan = colspan + 1; END
+%]
+<table id="mailbox_table">
+   <tr>
+      <td colspan="[% colspan %]"><h3>[% i18n('pOverview_mailbox_title') %]</h3></td>
+   </tr>
+   <tr class="header">
+      [% IF conf.show_status %]
+         <td></td>
+      [% END %]
+      <td>[% i18n('pOverview_mailbox_username') %]</td>
+      [% IF display_mailbox_aliases %]
+         <td>[% i18n('pOverview_alias_goto') %]</td>
+      [% END %]
+      <td>[% i18n('pOverview_mailbox_name') %]</td>
+      [% IF conf.quota %]
+         <td>[% i18n('pOverview_mailbox_quota') %]</td>
+      [% END %]
+      <td>[% i18n('pOverview_mailbox_modified') %]</td>
+      <td>[% i18n('pOverview_mailbox_active') %]</td>
+      [% colspan = colspan - 6 %]
+      <td colspan="[% colspan %]">&nbsp;</td>
+   </tr>
+   [% FOREACH mbox IN mailboxes %]
+        [% PROCESS mailbox_fragment.tt %]
+   [% END %]
+</table>
+
+<div id="nav_bar"><a name="LowArrow">[% show_back_up_next('LowArrow') %]</div>
+

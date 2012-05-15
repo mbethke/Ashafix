@@ -1,0 +1,11 @@
+<br /></br />
+[% IF conf.show_undeliverable %]
+   &nbsp;<span style="background-color:[% conf.show_undeliverable_color %]">[% conf.show_status_text %]</span>=[% i18n('pStatus_undeliverable') %]
+[% END %]
+[% IF conf.show_popimap %]
+   &nbsp;<span style="background-color:[% conf.show_popimap_color %]">[% conf.show_status_text %]</span>=[% i18n('pStatus_popimap') %]
+[% END %]
+[% FOREACH i in [ 0 .. conf.show_custom_domains.size ] %]
+   &nbsp;<span style="background-color:[% conf.show_custom_colors.$i %]">[% conf.show_status_text %]</span>=[% i18n('pStatus_custom') _ conf.show_custom_domains.$i %]
+[% END %]
+

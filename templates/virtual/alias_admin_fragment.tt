@@ -1,0 +1,17 @@
+[% IF conf.special_alias_control %]
+   <td><a href="[% urlfor('toggleactive', alias=a.address, domain=domain) %]">[% alias_active %]</a></td>
+   <td><a href="[% urlfor('alias-edit', address=a.address) %]">[% i18n('edit') %]</a></td>
+   <td><a href="[% urlfor('alias-delete', delete=a.address, domain=$domain) %]" onclick="return confirm('[% i18n('confirm') _ i18n('pOverview_get_aliases') _ ": " _ a.address %]">[% i18n('del') %]</a></td>
+[% ELSE %][%# not special_alias_control %]
+   [% IF not conf.default_aliases.keys.grep('^' _ a.address).size %]  
+      <td><a href="[% urlfor('toggleactive', alias=a.address, domain=domain) %]">[% alias_active %]</a></td>
+      <td><a href="[% urlfor('alias-edit', address=a.address) %]">[% i18n('edit') %]</a></td>
+      <td><a href="[% urlfor('alias-delete', alias=a.address, domain=domain) %]" onclick="return confirm('[% i18n('confirm') _ i18n('pOverview_get_aliases') _ ": " _ a.address %]')">[% i18n('del') %]</a></td>
+   [% ELSE %]
+      [%# this is a special alias, show status only, don't allow changes %]
+      <td>[% alias_active %]</td>
+      <td>&nbsp;</td>
+      <td>&nbsp;</td>
+   [% END %]
+[% END %][%# IF conf.special_alias_control %]
+

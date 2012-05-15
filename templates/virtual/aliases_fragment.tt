@@ -1,0 +1,19 @@
+<table id="alias_table">
+    <tr>
+        <td colspan="7"><h3>[% i18n('pOverview_alias_title') %]</h3></td>
+    </tr>
+    <tr class="header">
+        [% IF conf.show_status %]
+            <td></td>
+        [% END %]
+        <td>[% i18n('pOverview_alias_address') %]</td>
+        <td>[% i18n('pOverview_alias_goto') %]</td>
+        <td>[% i18n('pOverview_alias_modified') %]</td>
+        <td>[% i18n('pOverview_alias_active') %]</td>
+        <td colspan="2">&nbsp;</td>
+    </tr>
+    [% FOREACH a IN aliases %]
+        [% PROCESS alias_fragment.tt %]
+    [% END %]
+</table>
+

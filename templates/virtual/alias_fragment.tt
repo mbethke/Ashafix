@@ -1,0 +1,16 @@
+[% alias_active = a.active ? i18n('YES') : i18n('NO') %]
+[% WRAPPER tr_highlight %]
+    [% IF conf.show_status %]
+        <td>[% a.gen_status.html %]</td>
+    [% END %]
+    <td>[% searchhl(a.address) %]</td>
+    <td>[% searchhl(a.goto.html) %]</td>
+    <td>[% a.modified %]</td>
+    [%# TODO: merge superadmin / domain admin code %]
+    [% IF c.auth_has_role('globaladmin') %]
+        [% PROCESS alias_globaladmin_fragment.tt %]
+    [% ELSE %]
+        [% PROCESS alias_admin_fragment.tt %]
+    [% END %]
+[% END %]
+

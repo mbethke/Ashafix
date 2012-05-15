@@ -1,0 +1,17 @@
+<tr class="header">
+   <td>[% h.sprintf(i18n('pOverview_alias_domain_aliases'), domain) %]</td>
+   <td>[% i18n('pOverview_alias_domain_modified') %]</td>
+   <td>[% i18n('pOverview_alias_domain_active') %]</td>
+   <td>&nbsp;</td>
+</tr>
+[% FOREACH adom IN aliasdomains %]
+   [% WRAPPER tr_highlight %]
+      <td><a href="[% urlfor('', domain=adom.alias_domain, limit=current_limit) %]">[% adom.alias_domain %]</a></td>
+      <td>[% adom.modified %]</td>
+      [%# TODO: change all edit scripts not to require the domain parameter and extract it from the address. This avoids unnecessary problems when using search. %]
+      [%# TODO puke %]
+      <td><a href="[% urlfor('aliasdomain-edit-active', alias_domain=true, domain=adom.alias_domain, return=returnto) %]">[% adom.active ? i18n('YES') : i18n('NO') %]</a></td>
+      <td><a href="[% urlfor('alias-domain-delete', domain=adom.alias_domain) %]" onclick="return confirm('[% i18n('confirm') _ i18n('pOverview_get_alias_domains') _ ": " _ adom.alias_domain %]')">[% i18n('del') %]</a></td>
+   [% END %]
+[% END %]
+

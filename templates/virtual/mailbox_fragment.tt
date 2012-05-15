@@ -1,0 +1,44 @@
+[% RAWPERL %]print STDERR "mailbox\n";[% END %]
+[% WRAPPER tr_highlight %]
+    [% IF conf.show_status %]
+        <td>[% mbox.gen_status.html %]</td>
+    [% END %]
+    <td>[% searchhl(mbox.username) %]</td>
+    [% IF display_mailbox_aliases %]
+        <td>[% searchhl(mbox.goto) %]</td>
+        <td>[% mbox.goto_mailbox ? 'Mailbox' : 'Forward only' %]
+        [% IF mbox.goto_other.size %]<br />[% END %]
+        [% t = mbox.goto_other.join('<br />'); searchhl(t) %]
+    </td>
+    [% END %]
+    <td>[% mbox.name %]</td>
+    [% IF conf.quota %]
+        <td>
+            [% IF mbox.quota <  0; i18n('pOverview_disabled');
+               ELSIF mbox.quota == 0; i18n('pOverview_unlimited');
+               ELSE; IF conf.used_quotas;
+                    rounded = (mbox.current / conf.quota_multiplier) + 0.005;
+                    h.sprintf("%.2d/", rounded);
+               END;
+               rounded = (mbox.quota / conf.quota_multiplier) + 0.005;
+               h.sprintf("%.2d", rounded);
+            END %]
+        </td>
+    [% END %]
+    <td>[% mbox.modified %]</td>
+    <td><a href="[% urlfor('toggleactive', username=mbox.username, domain=domain) %]">[% mbox.active ? i18n('YES') : i18n('NO') %]</a></td>
+    [% IF conf.vacation_control_admin and conf.vacation %]
+        [% IF mbox.v_active == -1 %]
+            <td>&nbsp;</td>
+        [% ELSE %]
+            <td><a href="[% urlfor('vacation-edit', username=mbox.username, domain=domain) %]">[% mbox.v_active == 1 ? i18n('pOverview_vacation_edit') : i18n('pOverview_vacation_option') %]</a></td>
+        [% END %]
+    [% END %]
+    [% IF (not c.auth_has_role('globaladmin') and conf.alias_control_admin) or
+          (    c.auth_has_role('globaladmin') and conf.alias_control) %]
+        <td><a href="[% urlfor('alias-edit', address=mbox.username) %]">[% i18n('pOverview_alias_edit') %]</a></td>
+    [% END %]
+    <td><a href="[% urlfor('mailbox-editform', username=mbox.username, domain=domain) %]">[% i18n('edit') %]</a></td>
+    <td><a href="[% urlfor('mailbox-delete', mailbox=mbox.username, domain=domain) %]" onclick="return confirm([% i18n('confirm') _ i18n('pOverview_get_mailboxes') _ ': ' _ mbox.username %])">[% i18n('del') %]</a></td>                                                                                         
+[% END %][%# WRAPPER tr_highlight %]
+

@@ -1,0 +1,13 @@
+<tr class="header">
+   <td>[% sprintf(i18n('pOverview_alias_domain_target'), domain) %]</td>
+   <td>[% i18n('pOverview_alias_domain_modified') %]</td>
+   <td>[% i18n('pOverview_alias_domain_active') %]</td>
+   <td>&nbsp;</td>
+</tr>
+[% WRAPPER tr_highlight %]
+   <td><a href="[% urlfor("virtual-list", domain=targetDomain.target_domain, limit=current_limit) %]">[% targetDomain.target_domain %]</a></td>
+   <td>[% targetDomain.modified %]</td>
+   <td><a href="[% urlfor('aliasdomain-edit-active', alias_domain=true, domain=domain, return=returnto) %]">[% targetDomain.active ? i18n('YES') : i18n('NO') %]</a></td>
+   <td><a href="[% urlfor('aliasdomain-delete', domain=domain) %]" onclick="return confirm ('i[% i18n('confirm') _ i18n('pOverview_get_alias_domains') _ ": " _ domain %]')">[% i18n('del') %]</a></td>
+[% END %]
+
