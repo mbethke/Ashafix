@@ -1,47 +1,4 @@
-[%#
-@header ("Expires: Sun, 16 Mar 2003 05:00:00 GMT");
-@header ("Last-Modified: " . gmdate ("D, d M Y H:i:s") . " GMT");
-@header ("Cache-Control: no-store, no-cache, must-revalidate");
-@header ("Cache-Control: post-check=0, pre-check=0", false);
-@header ("Pragma: no-cache");
-@header ("Content-Type: text/html; charset=UTF-8");
-%]
-[%# Global macro definitions %]
-[% USE url %]
-
-[%- # Construct a URL from a base and a list of GET parameters
-MACRO urlfor(base, args) GET url(c.url_for(base), args) -%]
-
-[%- # Shortcut: get a localized string
-MACRO i18n(key) GET h.l(key) -%]
-
-[%- # Shortcut, used several times in tables
-   # TODO move to virtual/list?
-BLOCK tr_highlight -%]
-<tr class="hilightoff" onMouseOver="className='hilighton';" onMouseOut="className='hilightoff';">
-[%- content- %]
-</tr>
-[%- END -%]
-
-[%- # Create a <select> list
-MACRO gen_select(name, options, active, selectattr) BLOCK -%]
-<select name="[% name %]"[% selectattr.defined ? ' ' _ selectattr : '' %]>
-        [%- FOREACH o IN options -%]
-            <option value="[% o %]"[% ' selected="selected"' IF o == active %]>[% o %]</option>
-        [%- END -%]
-</select>
-[%- END -%]
-
-[%- # Create a <select> list where name and value of options are key and value
-    # in a hash. "active" has to specify the respective entry's key.
-MACRO gen_select_hash(name, options, active, selectattr) BLOCK -%]
-<select name="[% name %]"[% selectattr.defined ? ' ' _ selectattr : '' %]>
-        [%- FOREACH pair IN options -%]
-            <option value="[% pair.key %]"[% ' selected="selected"' IF pair.key == active %]>[% pair.value %]</option>
-        [%- END -%]
-</select>
-[%- END -%]
-
+[%- PROCESS macros.tt -%]
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
@@ -55,16 +12,16 @@ if (file_exists (realpath ("../".$CONF['theme_css']))) {
     print "<link rel=\"stylesheet\" type=\"text/css\" href=\"".htmlentities($CONF['theme_css'])."\" />\n";
 }
 %]
-<link rel="stylesheet" type="text/css" href="[% urlfor('/') _ conf.theme_css %]" />
+<link rel="stylesheet" type="text/css" href="[% urlfor('/') _ config.theme_css %]" />
 
 <title>Ashafix &mdash; [% c.req.headers.host %]</title>
 </head>
 <body>
 
 <div id="login_header">
-<img id="login_header_logo" src="[% urlfor('/') _ conf.theme_logo %]" alt="logo" />
-[% IF conf.show_header_text and conf.header_text.defined %]
-    <h2>[% conf.header_text %]</h2>
+<img id="login_header_logo" src="[% urlfor('/') _ config.theme_logo %]" alt="logo" />
+[% IF config.show_header_text and config.header_text.defined %]
+    <h2>[% config.header_text %]</h2>
 [% END %]
 </div>
 
