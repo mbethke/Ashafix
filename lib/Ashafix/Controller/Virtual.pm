@@ -175,9 +175,7 @@ sub list {
 #        foreach(sort keys %$m) { print "$_ => $m->{$_}\n" }
 #        print "\n";
 #    }
-    
-    $self->render(%renderargs
-    );
+    $self->render(%renderargs);
 }
 
 sub eval_size {

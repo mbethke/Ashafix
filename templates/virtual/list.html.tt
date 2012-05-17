@@ -78,11 +78,11 @@ search results %]
             <td colspan="4"><h3>[% i18n('pOverview_alias_domain_title') %]</h3></td>
          </tr>
          [% IF aliasdomains.size %]
-            [% PROCESS aliasdomains_fragment.tt %]
+            [% PROCESS virtual/aliasdomains_fragment.tt %]
          [% END %]
 
          [% IF targetdomain %]
-            [% PROCESS targetdomain_fragment.tt %]
+            [% PROCESS virtual/targetdomain_fragment.tt %]
          [% END %]
       </table>
    [% END %]
@@ -91,7 +91,7 @@ search results %]
 [% END %]
 
 [% IF aliases.size %]
-    [% PROCESS aliases_fragment.tt %]
+    [% PROCESS virtual/aliases_fragment.tt %]
 [% END %]
 
 [% IF can_add_alias %]
@@ -99,7 +99,7 @@ search results %]
 [% END %]
 
 [% IF mailboxes.size %]
-    [% PROCESS mailboxes_fragment.tt %]
+    [% PROCESS virtual/mailboxes_fragment.tt %]
 [% END %]
 
 [% IF can_add_mailbox %]
@@ -107,6 +107,6 @@ search results %]
 [% END %]
 
 [% IF conf.show_status and conf.show_status_key %]
-    [% PROCESS status_fragment.tt %]
+    [% PROCESS virtual/status_fragment.tt %]
 [% END %]
 

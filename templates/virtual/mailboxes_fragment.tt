@@ -53,7 +53,7 @@
       <td colspan="[% colspan %]">&nbsp;</td>
    </tr>
    [% FOREACH mbox IN mailboxes %]
-        [% PROCESS mailbox_fragment.tt %]
+        [% PROCESS virtual/mailbox_fragment.tt %]
    [% END %]
 </table>
 

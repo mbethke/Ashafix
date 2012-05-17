@@ -13,7 +13,7 @@
         <td colspan="2">&nbsp;</td>
     </tr>
     [% FOREACH a IN aliases %]
-        [% PROCESS alias_fragment.tt %]
+        [% PROCESS virtual/alias_fragment.tt %]
     [% END %]
 </table>
 

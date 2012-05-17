@@ -8,9 +8,9 @@
     <td>[% a.modified %]</td>
     [%# TODO: merge superadmin / domain admin code %]
     [% IF c.auth_has_role('globaladmin') %]
-        [% PROCESS alias_globaladmin_fragment.tt %]
+        [% PROCESS virtual/alias_globaladmin_fragment.tt %]
     [% ELSE %]
-        [% PROCESS alias_admin_fragment.tt %]
+        [% PROCESS virtual/alias_admin_fragment.tt %]
     [% END %]
 [% END %]
 
