@@ -13,7 +13,8 @@ Homepage: http://ashafix.net/
 
 Notes:
 
-- Requires at least version 2.3 of the database, particularly regarding domain entries for global admins in the domainadmin table.
+- Requires at least version 2.3 of the database, particularly regarding domain
+  entries for global admins in the domainadmin table.
 - The MySQL database uses InnoDB for transactions and referential integrity
   constraints. With databases this size, there is hardly any excuse for using
   MyISAM today.
