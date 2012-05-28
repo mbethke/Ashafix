@@ -138,7 +138,7 @@ sub _get_extended_params {
     my %params =  $self->_get_common_params;
 
     $params{$_} = $req->param($_) // '' foreach(qw/ password password2 name quota active send_mail /);
-    $params{username} => lc $username;
+    $params{username} = lc $username;
     $params{username_dom} = "$username\@$params{domain}";
     return %params;
 }
@@ -186,7 +186,7 @@ sub _create_check_username {
     $self->check_email_validity($par->{username_dom}) and
     return 1;
     $par->{username_error} = $self->l('pCreate_mailbox_username_text_error1');
-    warn "username_error: $par->{username_error}";
+    warn "username_error for `$par->{username_dom}': $par->{username_error}";
     return;
 }
 
