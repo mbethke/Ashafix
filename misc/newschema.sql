@@ -5,7 +5,6 @@ DROP TABLE IF EXISTS quota2;
 DROP TABLE IF EXISTS quota;
 DROP TABLE IF EXISTS mailbox;
 DROP TABLE IF EXISTS log;
-DROP TABLE IF EXISTS fetchmail;
 DROP TABLE IF EXISTS domain_admins;
 DROP TABLE IF EXISTS alias;
 DROP TABLE IF EXISTS alias_domain;
@@ -73,26 +72,6 @@ CREATE TABLE domain_admins (
   PRIMARY KEY username (username),
   FOREIGN KEY domain (domain) REFERENCES domain (domain) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Ashafix Domain Admins';
-
-CREATE TABLE fetchmail (
-  id integer unsigned NOT NULL AUTO_INCREMENT,
-  mailbox varchar(255) NOT NULL, -- TODO foreign key?
-  src_server varchar(255) NOT NULL,
-  src_auth enum('password','kerberos_v5','kerberos','kerberos_v4','gssapi','cram-md5','otp','ntlm','msn','ssh','any') DEFAULT NULL,
-  src_user varchar(255) NOT NULL,
-  src_password varchar(255) NOT NULL,
-  src_folder varchar(255) NOT NULL,
-  poll_time integer unsigned NOT NULL DEFAULT '10',
-  fetchall tinyint(1) unsigned NOT NULL DEFAULT '0',
-  keep tinyint(1) unsigned NOT NULL DEFAULT '0',
-  protocol enum('POP3','IMAP','POP2','ETRN','AUTO') DEFAULT NULL,
-  usessl tinyint(1) unsigned NOT NULL DEFAULT '0',
-  extra_options text,
-  returned_text text,
-  mda varchar(255) NOT NULL,
-  date timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE log (
   timestamp datetime NOT NULL DEFAULT '0000-00-00 00:00:00',
