@@ -7,25 +7,25 @@
    </tr>
    <tr>
       <td>[% i18n('pAdminCreate_admin_username') _ ":" %]</td>
-      <td><input class="flat" type="text" name="fUsername" value="[% tUsername %]" /></td>
+      <td><input class="flat" type="text" name="username" value="[% username %]" /></td>
       <td> [% pAdminCreate_admin_username_text %] </td>
    </tr>
    <tr>
       <td>[% i18n('pAdminCreate_admin_password') _ ":" %]</td>
-      <td><input class="flat" type="password" name="fPassword" /></td>
+      <td><input class="flat" type="password" name="password" /></td>
       <td>[% pAdminCreate_admin_password_text %]</td>
    </tr>
    <tr>
       <td>[% i18n('pAdminCreate_admin_password2') _ ":" %]</td>
-      <td><input class="flat" type="password" name="fPassword2" /></td>
+      <td><input class="flat" type="password" name="password2" /></td>
       <td>&nbsp;</td>
    </tr>
    <tr>
       <td>[% i18n('pAdminCreate_admin_address') _ ":" %]</td>
       <td>
-         <select name="fDomains" size="10" multiple="multiple">
+         <select name="domains" size="10" multiple="multiple">
             [% FOREACH dom IN domains %]
-               <option value="[% dom %]"[% ' selected="selected"' IF tDomains.in_list(dom) %]>[% dom %]</option>
+               <option value="[% dom %]"[% ' selected="selected"' IF domains.in_list(dom) %]>[% dom %]</option>
             [% END %]
          </select>
       </td>
@@ -35,7 +35,7 @@
       <td colspan="3" class="hlp_center"><input class="button" type="submit" name="submit" value="[% i18n('pAdminCreate_admin_button') %]" /></td>
    </tr>
    <tr>
-      <td colspan="3" class="standout">[% tMessage %]</td>
+      <td colspan="3" class="standout">[% message %]</td>
    </tr>
 </table>
 </form>

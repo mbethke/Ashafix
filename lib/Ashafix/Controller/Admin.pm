@@ -7,27 +7,33 @@ use Try::Tiny;
 
 sub create {
     my $self = shift;
+    my @render_params = (
+        pAdminCreate_admin_username_text => $self->l('pAdminCreate_admin_username_text'),
+        domains                          => [ $self->model('domain')->get_real_domains->flat ],
+    );
 
     for($self->req->method) {
         when('GET') {
-            return $self->render(
-                pAdminCreate_admin_username_text => $self->l('pAdminCreate_admin_username_text'),
-                tDomains => [],
-                domains  => [ $self->model('domain')->get_real_domains->flat ],
-            );
         }
         when('POST') {
-            my $res = $self->_create_admin(
-                (map { $self->param($_) } qw/fUsername fPassword fPassword2/),
-                0,
-                split / /, ($self->param('fDomains') // '')
-            ) or return;
-
+            my $bp = $self->req->body_params;
+            try {
+                my @msgs = $self->_create_admin(
+                    (map { $bp->param($_) } qw/username password password2/),
+                    0,
+                    split / /, ($bp->param('domains') // '')
+                );
+                push @render_params, @msgs;
+            } catch {
+                warn "Exception while trying to create admin";
+                push @render_params, @$_;
+            };
         }
         default {
             die "Can only GET/POST here";
         }
     }
+    return $self->render(@render_params);
 }
 
 sub delete {
@@ -41,7 +47,7 @@ sub delete {
     return $self->render(
         template => 'message',
         # TODO translate this message from English
-        tMessage => $self->l('pAdminDelete_admin_error'),
+        message => $self->l('pAdminDelete_admin_error'),
     );
 }
 
@@ -65,55 +71,46 @@ sub edit {
 
 sub _create_admin {
     my ($self, $uname, $pw1, $pw2, $no_genpw, @domains) = @_;
-    say "uname=$uname, pw1=$pw1, pw2=$pw2, domains='@domains'";
+    warn "uname=$uname, pw1=$pw1, pw2=$pw2, domains='@domains'";
 
     # Check empty address or existing admin
     if('' eq $uname or defined $self->_admin_exists($uname)) {
-        say "EXISTS: ",$self->model('admin')->select_admin($uname)->flat;
-        $self->render(
+        warn "EXISTS: ",$self->model('admin')->select_admin($uname)->flat;
+        die [
             pAdminCreate_admin_username_text => $self->l('pAdminCreate_admin_username_text_error2')
-        );
-        return;
+            ];
     }
     
-    return unless $self->_check_email_validity($uname);
-    return unless $pw1 = $self->_check_passwords($pw1, $pw2, $no_genpw);
+    $self->_check_email_validity($uname);
+    $pw1 = $self->_check_passwords($pw1, $pw2, $no_genpw);
 
     my $password = $self->app->pacrypt($pw1);
     if(1 == $self->model('admin')->insert_admin($uname, $password)->rows) {
         foreach my $dom (@domains) {
             # TODO error checking?
-            $self->model('domainadmins')->insert_domadmin($uname, $dom);
+            $self->model('domainadmin')->insert_domadmin($uname, $dom);
         }
         my $message = $self->l('pAdminCreate_admin_result_success') . "<br />($uname";
         if($self->cfg('generate_password') or $self->cfg('show_password')) {
             $message .= " / $password";
         }
         $message .= ')<br />';
-        $self->render(tMessage => $message);
+        return (message => $message);
     } else {
         # Error inserting admin record
-        $self->render(
-            tMessage => $self->l('pAdminCreate_admin_result_error') . "<br />($uname)<br />"
-        );
+        die [
+            message => $self->l('pAdminCreate_admin_result_error') . "<br />($uname)<br />"
+        ];
     }
     return;
 }
 
 sub _check_email_validity {
     my ($self, $uname) = @_;
-    my $ok = 1;
 
-    try {
-        $self->check_email_validity($uname)
-    } catch {
-        $self->show_error($_);
-        $self->render(
-            pAdminCreate_admin_username_text => $self->l('pAdminCreate_admin_username_text_error1')
-        );
-        $ok = 0;
-    }
-    return $ok;
+    $self->check_email_validity($uname) or die [
+        pAdminCreate_admin_username_text => $self->l('pAdminCreate_admin_username_text_error1')
+    ];
 }
 
 sub _check_passwords {
@@ -124,11 +121,10 @@ sub _check_passwords {
         if('' eq $pw1 and '' eq $pw2 and $self->cfg('generate_password') and !$no_genpw) {
             return $self->generate_password;
         } else {
-            $self->render(
+            die [
                 pAdminCreate_admin_username_text => $self->l('pAdminCreate_admin_username_text'),
                 pAdminCreate_admin_password_text => $self->l('pAdminCreate_admin_password_text_error')
-            );
-            return;
+            ];
         }
     }
     return $pw1;
@@ -136,7 +132,7 @@ sub _check_passwords {
 
 sub _admin_exists {
     my ($self, $name) = @_;
-    say "_admin_exists($name): ", join ", ", $self->model('admin')->select_admin($name)->flat;
+    warn "_admin_exists($name): ", join ", ", $self->model('admin')->select_admin($name)->flat;
     return $self->model('admin')->select_admin($name)->flat->[0];
 }
 1;

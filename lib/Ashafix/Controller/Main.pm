@@ -10,9 +10,8 @@ sub index {
 
 sub login {
     my $self = shift;
-    my $name = $self->param('fUsername');
-    my $pass = $self->param('fPassword');
-    my $lang = $self->param('lang');
+    my $name = $self->param('username');
+    my $pass = $self->param('password');
 
     return $self->render(
         # TODO generate from modules in I18N::* ? What about localized language names?
