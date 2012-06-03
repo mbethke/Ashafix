@@ -90,7 +90,7 @@ sub delete {
     my $rows = $self->model('domain')->delete($domain)->rows;
 
     # Success if last deletion succeeded and post-delete command ran OK
-    unless($rows and $self->_domain_postdeletion($domain)) {
+    unless($rows and $self->_postdeletion($domain)) {
         $self->stash(tMessage => $self->l('pAdminDelete_domain_error'));
     }
     return $self->redirect_to('domain-list');
@@ -194,6 +194,7 @@ sub _postcreation {
 
 sub _postdeletion {
     my ($self, $domain) = @_;
+    1;
     # TODO finish
 }
 1;
