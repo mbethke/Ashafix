@@ -18,15 +18,14 @@ sub create {
         when('POST') {
             my $bp = $self->req->body_params;
             try {
-                my @msgs = $self->_create_admin(
                     (map { $bp->param($_) } qw/username password password2/),
                     0,
                     split / /, ($bp->param('domains') // '')
                 );
-                push @render_params, @msgs;
+                $self->show_info($msg);
             } catch {
                 warn "Exception while trying to create admin";
-                push @render_params, @$_;
+                $self->show_error($_) for(@$_);
             };
         }
         default {
@@ -76,9 +75,7 @@ sub _create_admin {
     # Check empty address or existing admin
     if('' eq $uname or defined $self->_admin_exists($uname)) {
         warn "EXISTS: ",$self->model('admin')->select_admin($uname)->flat;
-        die [
-            pAdminCreate_admin_username_text => $self->l('pAdminCreate_admin_username_text_error2')
-            ];
+        die [ $self->l('pAdminCreate_admin_username_text_error2') ];
     }
     
     $self->_check_email_validity($uname);
@@ -90,17 +87,10 @@ sub _create_admin {
             # TODO error checking?
             $self->model('domainadmin')->insert_domadmin($uname, $dom);
         }
-        my $message = $self->l('pAdminCreate_admin_result_success') . "<br />($uname";
+        my $message = $self->l('pAdminCreate_admin_result_success') . " ($uname";
         if($self->cfg('generate_password') or $self->cfg('show_password')) {
             $message .= " / $password";
         }
-        $message .= ')<br />';
-        return (message => $message);
-    } else {
-        # Error inserting admin record
-        die [
-            message => $self->l('pAdminCreate_admin_result_error') . "<br />($uname)<br />"
-        ];
     }
     return;
 }
@@ -108,9 +98,8 @@ sub _create_admin {
 sub _check_email_validity {
     my ($self, $uname) = @_;
 
-    $self->check_email_validity($uname) or die [
-        pAdminCreate_admin_username_text => $self->l('pAdminCreate_admin_username_text_error1')
-    ];
+    $self->check_email_validity($uname) or
+    die [ $self->l('pAdminCreate_admin_username_text_error1') ];
 }
 
 sub _check_passwords {
@@ -122,8 +111,8 @@ sub _check_passwords {
             return $self->generate_password;
         } else {
             die [
-                pAdminCreate_admin_username_text => $self->l('pAdminCreate_admin_username_text'),
-                pAdminCreate_admin_password_text => $self->l('pAdminCreate_admin_password_text_error')
+                $self->l('pAdminCreate_admin_username_text'),
+                $self->l('pAdminCreate_admin_password_text_error')
             ];
         }
     }
