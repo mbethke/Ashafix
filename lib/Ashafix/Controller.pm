@@ -174,6 +174,7 @@ sub check_email_validity {
         -mxcheck => $self->cfg('emailcheck_resolve_domain'),
         -tldcheck => 1
     );
+    warn "checking mail address `$uname'";
     return 1 if $mvalid->address($uname);
 
     my $err;
