@@ -39,9 +39,10 @@ sub new {
     unless($DB) {
         @connectargs = @config{qw/dsn user password/};
         $DB = _connect(@connectargs);
-        
+        $self->_setup_dbms_specifics($DB, $config{dsn});
+
         my $modules = [
-            grep { !/^Ashafix::Model::Base$/ } @{Mojo::Loader->search('Ashafix::Model')}
+            grep { $_ ne 'Ashafix::Model::Base' } @{Mojo::Loader->search('Ashafix::Model')}
         ];
         foreach my $pm (@$modules) {
             my $e = Mojo::Loader->load($pm);
@@ -49,15 +50,20 @@ sub new {
             my ($basename) = $pm =~ /.*::(.*)/;
             $self->{modules}{lc $basename} = $pm->new(\%config);
         }
-        $self->{modules}{''} = $self;
+        $self->{modules}{''} = $self;   # Empty model name gives access to Model object
     }
     return $self;
 }
 
+# Get a model object by name
 sub model {
     my ($self, $model) = @_;
     return $self->{modules}{$model // ''} || croak "Unknown model `$model'";
 }
+
+# Return a list of avaialable model names
+# Probably only for test code
+sub models { return grep { $_ ne '' } keys %{$_[0]->{modules}} }
 
 # Regular function, proxies $DB->query to simplify debugging
 sub query {
@@ -92,6 +98,17 @@ sub _connect {
         convert => 'upper'
     );
     return $db;
+}
+
+sub _setup_dbms_specifics {
+    my ($self, $db, $dsn) = @_;
+    my $dbh = $db->dbh;
+    my ($driver) = $dsn =~ /DBI:([^:]+):/i;
+    if('Pg' eq $driver) {
+        # PostgreSQL has a weird boolean type default
+        $dbh->{pg_bool_tf} = 0;     # use 0/1 instead of 'f'/'t'
+        return;
+    }
 }
 
 1;
