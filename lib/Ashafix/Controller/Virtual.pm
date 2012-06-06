@@ -45,9 +45,7 @@ sub list {
     $is_globaladmin = $self->auth_has_role('globaladmin');
 
     unless(@allowed_domains) {
-        $self->flash_error($self->l(
-                $is_globaladmin ? 'no_domains_exist' : 'no_domains_for_this_admin')
-        );
+        $self->flash_error_l($is_globaladmin ? 'no_domains_exist' : 'no_domains_for_this_admin');
         return $self->redirect_to('domain-list');
     }
 
@@ -57,7 +55,7 @@ sub list {
 
     unless(any { $_ eq $domain } @allowed_domains) {
         # Domain parameter not in list of allowed domains
-        $self->flash_error($self->l('invalid_parameter'));
+        $self->flash_error_l('invalid_parameter');
         return $self->redirect_to('domain-list');
     }
 

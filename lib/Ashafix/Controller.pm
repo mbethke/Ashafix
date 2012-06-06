@@ -22,10 +22,22 @@ use URI::Escape;
 use Email::Valid;
 use Carp;
 
-sub show_error  { $_[0]->_add_show(error => $_[1])   }
-sub show_info   { $_[0]->_add_show(info  => $_[1])   }
-sub flash_error { $_[0]->_add_flash(error => $_[1])  }
-sub flash_info  { $_[0]->_add_flash(info  => $_[1])  }
+# Show error/info in page header of current or redirected-to page
+sub show_error  { shift->_add_show( error => join('', @_)) }
+sub show_info   { shift->_add_show( info  => join('', @_)) }
+sub flash_error { shift->_add_flash(error => join('', @_)) }
+sub flash_info  { shift->_add_flash(info  => join('', @_)) }
+# Localizing versions of the above
+sub show_error_l  { shift->_localize(_add_show  => error => @_) }
+sub show_info_l   { shift->_localize(_add_show  => info  => @_) }
+sub flash_error_l { shift->_localize(_add_flash => error => @_) }
+sub flash_info_l  { shift->_localize(_add_flash => info  => @_) }
+sub _localize {
+    my ($self, $func, $what, $key) = splice @_,0,4;
+    print STDERR "_localize($self, $func, $what, $key)\n";
+    $self->$func($what => join('', $self->l($key), @_));
+}
+
 sub _add_show   { push @{$_[0]->stash($_[1])}, $_[2] }
 sub _add_flash  {
     my ($self, $what, $msg) = @_;

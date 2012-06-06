@@ -54,7 +54,7 @@ sub create {
     # Check that destinations are valid
     foreach(@gotos) {
         unless($self->check_email_validity($_)) {
-            $self->show_error($self->l('pInvalidMailRegex') . ": $_");
+            $self->show_error_l('pInvalidMailRegex', ": $_");
             return $self->_render_create_error(
                 $domain, $address, $goto, 'pCreate_alias_address_text_error1'
             );
@@ -80,12 +80,14 @@ sub create {
     };
     if($success) {
         $self->db_log($domain, 'create_alias', $fromto_text);
-        $self->show_info($self->l('pCreate_alias_result_success') . "<br />($fromto_text)<br />");
+        # TODO remove HTML here
+        $self->show_info_l('pCreate_alias_result_success', "<br />($fromto_text)<br />");
         $address = '';  # delete for next form
         @gotos = ();
     } else {
         # Alias creation failed
-        $self->show_error($self->l('pCreate_alias_result_error') . "<br />($fromto_text)<br />");
+        # TODO remove HTML here
+        $self->show_error_l('pCreate_alias_result_error', "<br />($fromto_text)<br />");
         warn "alias creation failed ($fromto_text)";
     };
     return $self->_render_create(

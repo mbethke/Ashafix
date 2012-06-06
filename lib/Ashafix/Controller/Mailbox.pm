@@ -94,7 +94,7 @@ sub edit {
         # Edit successful
         $self->db_log ($params{domain}, 'edit_mailbox', $params{username});
     } else {
-         $self->flash_error($self->l('pEdit_mailbox_result_error'));
+         $self->flash_error_l('pEdit_mailbox_result_error');
     }
     $self->redirect_to('virtual-list');
 }
@@ -106,7 +106,7 @@ sub editform {
     my $model = $self->model('mailbox');
 
     unless($self->check_domain_owner($self->auth_get_username, $params{domain})) {
-        $self->flash_error($self->l('pEdit_mailbox_domain_error') . $params{domain});
+        $self->flash_error_l('pEdit_mailbox_domain_error', $params{domain});
         return $self->redirect_to('virtual-list');
     }
 
@@ -287,21 +287,21 @@ sub _create_mailbox {
             my $showpass = ($par->{pass_generated} or $self->cfg('show_password')) ? " / $password" : '';
             my $folders_ok = $self->_create_mailbox_subfolders($par->{username_dom}, $password);
             # TODO get rid of HTML here
-            $self->show_info($self->l($folders_ok ?
+            $self->show_info_l($folders_ok ?
                     'pCreate_mailbox_result_success' :
-                    'pCreate_mailbox_result_succes_nosubfolders'
-                ) . "<br />($par->{username}$showpass)"
+                    'pCreate_mailbox_result_succes_nosubfolders',
+                    "<br />($par->{username}$showpass)"
             );
         } else {
             # TODO should we try to manually roll back the previous INSERT for MySQL?
             # TODO db_query('ROLLBACK');
             # TODO get rid of HTML here
-            $self->show_error($self->l('pCreate_mailbox_result_error') . "<br />($par->{username_dom})");
+            $self->show_error_l('pCreate_mailbox_result_error', "<br />($par->{username_dom})");
             return;
         }
     } else {
         # TODO get rid of HTML here
-        $self->show_error($self->l('pAlias_result_error') . "<br />($par->{username_dom} -> $par->{username_dom})");
+        $self->show_error_l('pAlias_result_error', "<br />($par->{username_dom} -> $par->{username_dom})");
         # TODO db_query('ROLLBACK');
         return;
     }
@@ -316,7 +316,7 @@ sub _welcome_mail {
         eval "use MIME::Lite";
         die if $@;
     } catch {
-        $self->show_error($self->l('pSendmail_result_error') . "(module MIME::Lite not installed)");
+        $self->show_error_l('pSendmail_result_error' . "(module MIME::Lite not installed)");
         $ok = 0
     };
     return unless $ok;
@@ -333,9 +333,9 @@ sub _welcome_mail {
             Port    => $self->cfg('smtp_port') || 25,
             Timeout => 30,
         );
-        $self->show_info($self->l('pSendmail_result_success'));
+        $self->show_info_l('pSendmail_result_success');
     } catch {
-        $self->show_error($self->l('pSendmail_result_error') . "($_)");
+        $self->show_error_l('pSendmail_result_error', "($_)");
     };
 }
 

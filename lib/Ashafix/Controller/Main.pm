@@ -30,7 +30,7 @@ sub login {
         $self->redirect_to('index');
     } else {
         # Login failed
-        $self->show_error($self->l('pLogin_failed'));
+        $self->show_error_l('pLogin_failed');
     }
 }
 
