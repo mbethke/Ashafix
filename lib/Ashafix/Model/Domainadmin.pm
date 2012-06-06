@@ -27,6 +27,7 @@ our %queries = (
     insert_domadmin     => "INSERT INTO %table_domain_admins (username,domain,created) VALUES (?,?,NOW())",
     delete_by_user      => "DELETE FROM %table_domain_admins WHERE username=?",
     delete_by_domain    => "DELETE FROM %table_domain_admins WHERE domain=?",
+    delete_everything   => "DELETE FROM %table_domain_admins",
 );
 
 1;

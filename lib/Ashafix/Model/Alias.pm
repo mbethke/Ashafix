@@ -30,6 +30,7 @@ our %queries = (
     delete_by_alias         => "DELETE FROM %table_alias WHERE address=? AND domain=?",
     insert                  => "INSERT INTO %table_alias
         (address,goto,domain,created,modified,active) VALUES (?,?,?,NOW(),NOW(),?)",
+    delete_everything       => "DELETE FROM %table_alias",
 );
 
 1;

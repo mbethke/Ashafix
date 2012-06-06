@@ -27,6 +27,7 @@ our %queries = (
     LEFT JOIN %table_domain_admins a ON d.domain=a.domain 
     WHERE a.username=? AND d.active=1 AND d.backupmx=0
     ORDER BY a.domain",
+    delete_everything   => "DELETE FROM %table_domain",
 );
 
 our %snippets = (

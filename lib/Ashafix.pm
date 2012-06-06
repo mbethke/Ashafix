@@ -34,6 +34,7 @@ sub startup {
     $Carp::Verbose = 1;     # TODO debugging only
     $self->setup_plugins;
     $self->setup_routing;
+    $self->setup_hooks;
 }
 
 sub setup_plugins {
@@ -148,6 +149,18 @@ sub setup_routing {
     $r->route('/sendmail')->over('login')->to('misc#sendmail')->name('mail-send');
     $r->route('/password')->over('login')->to('misc#password')->name('passwd-change');
     $r->route('/viewlog') ->over('login')->to('misc#viewlog') ->name('log-view');
+}
+
+sub setup_hooks {
+    my ($self) = @_;
+    $self->hook(before_dispatch => sub {
+            my $c = shift;
+            # As "defaults" values are not deep-copied, setting a hashref there
+            # would just copy that hashref and stash modifications would actually
+            # modify the defaults.
+            $c->stash(info  => []);
+            $c->stash(error => []);
+        });
 }
 
 sub setup_model {

@@ -36,6 +36,7 @@ our %snippets = (
     #LIMIT ? OFFSET ?",
     # TODO modify result: modified=gmstrftime('%c %Z',$row['modified']);
     #                     active  =('t'==$row['active']) ? 1 : 0;
+    delete_everything   => "DELETE FROM %table_alias_domain",
 );
 
 sub select_by_domain {

@@ -18,6 +18,11 @@ use strict;
 use warnings;
 use parent 'Ashafix::Model::Base';
 
+our %snippets = (
+    delete_everything_old   => "DELETE FROM %table_quota",
+    delete_everything_new   => "DELETE FROM %table_quota2",
+);
+
 our %queries = (
     find_by_user_old    => "SELECT * FROM %table_quota WHERE username=?",
     delete_old          => "DELETE FROM %table_quota WHERE username=?",
@@ -36,4 +41,9 @@ sub new {
         *{"$nosuff"} = *{"$aliasto"};    # alias find_by_user => find_by_user_{old,new}
     }
     return $self;
+}
+
+sub delete_everything {
+    Ashafix::Model::query($snippets{delete_everything_old});
+    Ashafix::Model::query($snippets{delete_everything_new});
 }

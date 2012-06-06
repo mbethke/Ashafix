@@ -31,6 +31,7 @@ our %queries = (
     insert                  => "INSERT INTO %table_mailbox
         (username,password,name,maildir,local_part,quota,domain,created,modified,active)
         VALUES (?,?,?,?,?,?,?,NOW(),NOW(),?)",
+    delete_everything       => "DELETE FROM %table_mailbox",
 );
 
 1;

@@ -22,11 +22,16 @@ use URI::Escape;
 use Email::Valid;
 use Carp;
 
-sub show_error  { $_[0]->stash(error => $_[1]) }
-sub show_info   { $_[0]->stash(info  => $_[1]) }
-sub flash_error { $_[0]->flash(error => $_[1]) }
-sub flash_info  { $_[0]->flash(info  => $_[1]) }
-
+sub show_error  { $_[0]->_add_show(error => $_[1])   }
+sub show_info   { $_[0]->_add_show(info  => $_[1])   }
+sub flash_error { $_[0]->_add_flash(error => $_[1])  }
+sub flash_info  { $_[0]->_add_flash(info  => $_[1])  }
+sub _add_show   { push @{$_[0]->stash($_[1])}, $_[2] }
+sub _add_flash  {
+    my ($self, $what, $msg) = @_;
+    my $msgs = $self->flash($what) // [];
+    $self->flash($what => [@$msgs, $msg]);
+}
 # Get the currently logged in user
 sub auth_get_username {
     my $self = shift;

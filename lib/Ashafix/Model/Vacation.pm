@@ -19,8 +19,9 @@ use warnings;
 use parent 'Ashafix::Model::Base';
 
 our %queries = (
-    check_by_mbox   => 'SELECT 1 FROM %table_vacation WHERE email=? AND domain=?',
-    delete_vacation => 'DELETE FROM %table_vacation WHERE email=? AND domain=?',
+    check_by_mbox       => 'SELECT 1 FROM %table_vacation WHERE email=? AND domain=?',
+    delete_vacation     => 'DELETE FROM %table_vacation WHERE email=? AND domain=?',
+    delete_everything   => 'DELETE FROM %table_vacation',
 );
 
 1;

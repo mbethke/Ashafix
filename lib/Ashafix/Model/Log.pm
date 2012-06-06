@@ -20,8 +20,9 @@ use warnings;
 use parent 'Ashafix::Model::Base';
 
 our %queries = (
-    delete              => "DELETE FROM %table_log WHERE domain=?",
     insert              => "INSERT INTO %table_log VALUES (NOW(),?,?,?,?)",
+    delete              => "DELETE FROM %table_log WHERE domain=?",
+    delete_everything   => "DELETE FROM %table_log",
 );
 
 1;

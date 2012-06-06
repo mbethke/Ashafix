@@ -28,6 +28,7 @@ our %queries = (
         (domain,description,aliases,mailboxes,maxquota,transport,backupmx,created,modified)
         VALUES (?,?,?,?,?,?,?,NOW(),NOW())",
     delete              => "DELETE FROM %table_domain WHERE domain=?",
+    delete_everything   => "DELETE FROM %table_domain",
 );
 
 1;
