@@ -46,7 +46,8 @@ sub setup_plugins {
     $self->helper(cfg => sub { $_[0]->stash('config')->{$_[1]} });
 
     # Cross Site Request Forgery protection
-    $self->plugin('Mojolicious::Plugin::CSRFDefender');
+    # TODO smarter method to disable during testing?
+    $self->plugin('Mojolicious::Plugin::CSRFDefender') unless $ENV{TESTING};
     
     # Load Template Toolkit and set as default
     $self->plugin(
@@ -160,6 +161,13 @@ sub setup_hooks {
             # modify the defaults.
             $c->stash(info  => []);
             $c->stash(error => []);
+
+            # Debug request logging
+            my $req    = $c->req;
+            my $method = $req->method;
+            my $path   = $req->url->path->to_abs_string;
+            my $params = $req->params->to_string;
+            print STDERR "REQ  : $method $path [$params]\n";
         });
 }
 
