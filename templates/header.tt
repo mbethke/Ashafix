@@ -42,4 +42,19 @@ if (file_exists (realpath ("../".$CONF['theme_css']))) {
     [% END %]
 [% END %]
 
+[% IF h.stash.info.size %]
+    <ul class="flash-info">
+        [% FOREACH msg IN h.stash.info %]
+            <li>[% msg %]</li>
+        [% END %]
+    </ul>
+[% END %]
+[% IF h.stash.error.size %]
+    <ul class="flash-error">
+        [% FOREACH msg IN h.stash.error %]
+            <li>[% msg %]</li>
+        [% END %]
+    </ul>
+[% END %]
+
 [%# vim: set expandtab softtabstop=4 tabstop=4 shiftwidth=4: %]

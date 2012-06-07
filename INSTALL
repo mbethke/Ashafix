@@ -1,0 +1,15 @@
+To start playing around with Ashafix, better don't use your production Postfix
+database. Create a new one using the included schema:
+
+- Create a new MySQL database and corresponding user to match the data in
+  ashafix.conf. To work with the defaults:
+  CREATE DATABASE postfix_new;
+  GRANT select,insert,delete,update ON postfix_new.* TO 'postfixadmin'@'localhost' IDENTIFIED BY 'pfadm';
+  use postfix_new
+  \. misc/newschema.sql
+
+- There is no conversion script for old Postfixadmin databases yet. Just run the
+  test script and use the data it leaves behind:
+  $ TESTING=1 script/ashafix test
+  Login is "test@test.invalid" with password "12345678".
+
