@@ -1,4 +1,3 @@
-[% RAWPERL %]print STDERR "mailbox\n";[% END %]
 [% WRAPPER tr_highlight %]
     [% IF conf.show_status %]
         <td>[% mbox.gen_status.html %]</td>
