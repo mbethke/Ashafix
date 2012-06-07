@@ -4,7 +4,6 @@ use Ashafix::I18N;
 use Data::Dumper;
 
 sub index {
-    my $self = shift;
     # just render
 }
 
@@ -13,10 +12,7 @@ sub login {
     my $name = $self->param('username');
     my $pass = $self->param('password');
 
-    return $self->render(
-        # TODO generate from modules in I18N::* ? What about localized language names?
-        supported_languages => Ashafix::I18N::supported_languages
-    ) unless defined $name and defined $pass;
+    return $self->render unless defined $name and defined $pass;
 
     my $stored_pass = $self->_find_password($name);
     if(defined $stored_pass and
