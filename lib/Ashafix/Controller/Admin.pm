@@ -18,6 +18,7 @@ sub create {
         when('POST') {
             my $bp = $self->req->body_params;
             try {
+                my $msg = $self->_create_admin(
                     (map { $bp->param($_) } qw/username password password2/),
                     0,
                     split / /, ($bp->param('domains') // '')
@@ -91,6 +92,7 @@ sub _create_admin {
         if($self->cfg('generate_password') or $self->cfg('show_password')) {
             $message .= " / $password";
         }
+        return $message;
     }
     return;
 }
