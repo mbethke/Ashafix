@@ -55,4 +55,4 @@
         [% END %]
    </table>
 [% END %]
-<p><a href="[% urlfor('create-domain') %]">[% i18n('pAdminMenu_create_domain') %]</a>
+<p><a href="[% urlfor('domain-create') %]">[% i18n('pAdminMenu_create_domain') %]</a>
