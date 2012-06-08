@@ -4,36 +4,43 @@ use Email::Valid;
 use HTML::Entities;
 use Try::Tiny;
 
+my %onoff = ( on => 1, off => 0 );
+
 sub create {
     my $self = shift;
     my $conf = $self->stash('config');
     my %params;
     my %defaults = (
-        'domain'         => [ undef ],
-        'description'    => [ '' ], 
-        'aliases'        => [ $conf->{aliases} ],
-        'mailboxes'      => [ $conf->{mailboxes} ],
-        'maxquota'       => [ $conf->{maxquota} ],
-        'transport'      => [ $conf->{transport_default}, @{$conf->{transport_options}} ], 
-        'defaultaliases' => [ 'off', 'on', 'off' ],
-        'backupmx'       => [ 'off', 'on', 'off' ],
+        'domain'         => undef,
+        'description'    => '', 
+        'aliases'        => $conf->{aliases},
+        'mailboxes'      => $conf->{mailboxes},
+        'maxquota'       => $conf->{maxquota},
+        'transport'      => $conf->{transport_default},
+        'defaultaliases' => 'off',
+        'backupmx'       => 'off',
     );
-    my %onoff = ( on => 1, off => 0 );
+    my %permissible = (
+        'transport'      => [ @{$conf->{transport_options}} ], 
+        'defaultaliases' => [ 'on', 'off' ],
+        'backupmx'       => [ 'on', 'off' ],
+    );
 
+    # Validate parameters
+    # TODO factor out to Ashafix::Controller?
     while(my ($field, $def) = each %defaults) {
-        my $default = shift @$def;
-        my $val     = $self->param($field) // $default;
-        print "Param `$field' => `$val'\n";
-        $val = $default unless length $val;
-        if(defined $val and @$def) {
+        my $val = $self->param($field) // $defaults{$field};
+        $val = $defaults{$field} unless length $val;
+        if(defined $val and exists $permissible{$field}) {
             # Likely a hacking attempt, no need to be user friendly
-            grep { $_ eq $val } @$def or die "Invalid value `$val' given for `$field'";
+            grep { $_ eq $val } @{$permissible{$field}} or
+            die "Invalid value `$val' given for `$field'";
         }
         $params{$field} = $val;
     }
 
     # TODO RESTful
-    'GET' eq $self->req->method and return $self->render(%params);
+    $self->req->method =~ /^(?:GET|HEAD)/ and return $self->render(%params);
 
     my $backupmx = '';
     $self->_check_domain($params{domain}) or return $self->render(
@@ -44,15 +51,21 @@ sub create {
         ()
     );
 
-    # TODO handle pgsql for backupmx (db_get_boolean)
-    1 == $self->model('domain')->insert(
-        @params{qw/domain description aliases mailboxes maxquota transport/},
-        $onoff{$params{backupmx}}
-    )->rows or return $self->render(
-        %params, 
-        # TODO get rid of HTML crap
-        message => $self->l('pAdminCreate_domain_domain_result_error') . "<br />($params{domain})<br />",
-    );
+    try {
+        1 == $self->model('domain')->insert(
+            @params{qw/domain description aliases mailboxes maxquota transport/},
+            $onoff{$params{backupmx}}
+        )->rows or die;
+    } catch {
+        return $self->render(
+            %params, 
+            # TODO is this error the same for PostgreSQL?
+            message => $self->l('pAdminCreate_domain_result_error') . 
+            # TODO localize
+            (/Duplicate entry '[^']*' for key 'PRIMARY'/ ? ' Already exists' : '') .
+            " ($params{domain})",
+        );
+    };
 
     if('on' eq $params{defaultaliases}) {
         while(my ($alias, $dest) = each %{$conf->{default_aliases}}) {
