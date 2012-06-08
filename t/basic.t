@@ -2,7 +2,7 @@
 use FindBin;
 use lib "$FindBin::Bin/../lib";
 use Mojo::Base -strict;
-use Test::More tests => 10;
+use Test::More tests => 14;
 use Test::Mojo;
 
 my @credentials = (
@@ -19,6 +19,14 @@ $t->get_ok('/')->status_is(200)->content_like(qr/Mail admins login here to admin
 $t->post_form_ok('/' => { @credentials })->status_is(302);
 $t->get_ok('/main')->content_like(qr#List your aliases and mailboxes. You can edit / delete them from here.#);
 $t->get_ok('/admin/list')->content_like(qr#<td><a href="/admin/edit\?username=test%40test.invalid">YES</a></td>#);
+$t->get_ok('/domain/list')->content_like(qr#<p><a href="/domain/create">New Domain</a>#);
+$t->post_form_ok('/domain/create' => {
+        domain          => 'invalid.com',
+        description     => 'Test domain',
+        aliases         => 123,
+        mailboxes       => 456,
+        defaultaliases  => 'on'
+    })->status_is(200);
 
 exit 0;
 
