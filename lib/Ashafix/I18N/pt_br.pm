@@ -1,4 +1,4 @@
-package Ashafix::I18N::pt-br;
+package Ashafix::I18N::pt_br;
 use utf8;
 use Mojo::Base 'Ashafix::I18N';
 our %Lexicon = (
