@@ -14,15 +14,10 @@ sub login {
 
     return $self->render unless defined $name and defined $pass;
 
-    my $stored_pass = $self->_find_password($name);
-    if(defined $stored_pass and
-        $self->app->pacrypt($pass, $stored_pass) eq $stored_pass)
-    {
+    my $userinfo = $self->verify_account($name, $pass);
+    if($userinfo) {
         # Login successful
-        # TODO how to check for admin vs. user?
-        $self->session('user', { name => $name, roles => { 'admin' => 1 }});
-        # Check for global admin
-        $self->session('user')->{roles}{globaladmin} = $self->_check_global_admin($name);
+        $self->session('user', $userinfo);
         $self->redirect_to('index');
     } else {
         # Login failed
@@ -43,7 +38,5 @@ sub _find_password {
     return $pass if defined $pass;
     return $self->model('mailbox')->get_password($user)->list;
 }
-
-sub _check_global_admin { defined $_[0]->model('domainadmin')->check_global_admin($_[1])->list }
 
 1;

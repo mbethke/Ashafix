@@ -51,6 +51,27 @@ sub auth_get_username {
     return $user->{name};
 }
 
+
+# Takes a user name and a password and returns a user info structure
+# or undef on verification failure
+# TODO put this into the model and make the return a proper user object
+sub verify_account {
+    my ($self, $user, $pass) = @_;
+    my $roles;
+    return unless defined $user and defined $pass;
+    if($self->_check_password($user, $pass, 1)) {
+        # Found admin user
+        $roles = { admin => 1, globaladmin => $self->_check_global_admin($user) };
+    } elsif($self->_check_password($user, $pass, 0)) {
+        # Found regular user
+        $roles = { user => 1 };
+    } else {
+        # Verification unsuccessful
+        return;
+    }
+    return { name => $user, roles => $roles };
+}
+
 # Takes a user role and returns a boolean indicating whether current user
 # has this role
 sub auth_has_role {
@@ -252,5 +273,17 @@ sub db_log {
     my $username = $self->auth_get_username;
     return 1 == $self->model('log')->insert("$username ($remote_addr)", $domain, $action, $data)->rows;
 }
+
+# Takes a username/password pair and a boolean value indicating whether
+# to look for admins (true) or users (false). Returns a boolean value
+# for verification status.
+sub _check_password {
+    my ($self, $user, $pass, $admin) = @_;
+    my $stored_pass = $self->model($admin ? 'admin' : 'mailbox')->get_password($user)->list;
+    return defined $stored_pass && $self->app->pacrypt($pass, $stored_pass) eq $stored_pass;
+}
+
+# Return a true value if the passed-in user is a global admin
+sub _check_global_admin { defined $_[0]->model('domainadmin')->check_global_admin($_[1])->list }
 
 1;

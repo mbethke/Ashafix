@@ -26,6 +26,7 @@ our %queries = (
     # TODO select_admin_pgsql => "SELECT *, EXTRACT(epoch FROM created) AS uts_created, EXTRACT (epoch FROM modified) AS uts_modified FROM %table_admin WHERE username=?"
     select_admin        => "SELECT * FROM %table_admin WHERE username=?",
     delete              => "DELETE FROM %table_admin WHERE username=?",
+    update_password     => "UPDATE %table_admin SET password=?,modified=NOW() WHERE username=?",
     delete_everything   => "DELETE FROM %table_admin",
 );
 
