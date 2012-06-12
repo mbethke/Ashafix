@@ -56,7 +56,7 @@ sub new
 
 sub _check_deliverable {
     my $self = shift;
-
+    my $ctrl = $self->{controller};
     # Check for undeliverable alias destination
     DELIVERABLE:
     foreach my $goto (@{$self->{destinations}}) {
@@ -68,13 +68,13 @@ sub _check_deliverable {
         if($rec_delim) {
             my $sans_delim;
             ($sans_delim = $goto) =~ s/\Q$rec_delim\E[^\Q$rec_delim\E]*\@/@/;
-            $addr = $self->{controller}->model('alias')->get_address_3($goto, $catchall, $sans_delim)->flat->[0];
+            $addr = $ctrl->model('alias')->get_address_3($goto, $catchall, $sans_delim)->flat->[0];
         } else {
-            $addr = $self->{controller}->model('alias')->get_address_2($goto, $catchall)->flat->[0];
+            $addr = $ctrl->model('alias')->get_address_2($goto, $catchall)->flat->[0];
         }
 
         unless($addr) {
-            state $vacation_domain = lc $self->{controller}->cfg('vacation_domain');
+            state $vacation_domain = lc $ctrl->cfg('vacation_domain');
             # Address is not a known mailbox, check for vacation domain
             my $domain = lc substr $catchall, 1;
             my $vacdomain = lc $domain =~ /\@(.*)/;
@@ -83,7 +83,7 @@ sub _check_deliverable {
                 last DELIVERABLE;
             }
             # Check for configured exceptions
-            foreach(@{$self->cfg('show_undeliverable_exceptions')}) {
+            foreach(@{$ctrl->cfg('show_undeliverable_exceptions')}) {
                 if($domain eq lc $_) {
                     $self->deliverable = $STATUS_NORMAL;
                     last DELIVERABLE;
