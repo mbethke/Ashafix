@@ -1,4 +1,4 @@
-package Ashafix::Model::Base;
+package Ashafix::Schema::Base;
 #===============================================================================
 #
 #         FILE:  Base.pm
@@ -29,7 +29,7 @@ sub new {
     no strict 'refs';
     while(my ($name, $sql) = each %{"${class}::queries"}) {
         $sql = _edit_sql($sql, $TABLEDEFS);
-        *{"${class}::$name"} = sub { shift; return Ashafix::Model::query($sql, @_) };
+        *{"${class}::$name"} = sub { shift; return Ashafix::Schema::query($sql, @_) };
     }
     
     # Just replace table names in package-global %snippets
@@ -49,7 +49,7 @@ sub sql_in_clause_bindparams {
 # For test code only.
 sub raw_query {
     my ($self, $query) = (shift, shift);
-    return Ashafix::Model::query(_edit_sql($query, $TABLEDEFS), @_);
+    return Ashafix::Schema::query(_edit_sql($query, $TABLEDEFS), @_);
 }
 
 # Not a method!

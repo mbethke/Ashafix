@@ -1,4 +1,4 @@
-package Ashafix::Model::Vacation;
+package Ashafix::Schema::Vacation;
 #===============================================================================
 #
 #         FILE:  Vacation.pm
@@ -16,7 +16,7 @@ package Ashafix::Model::Vacation;
 use 5.010;
 use strict;
 use warnings;
-use parent 'Ashafix::Model::Base';
+use parent 'Ashafix::Schema::Base';
 
 our %queries = (
     check_by_mbox       => 'SELECT 1 FROM %table_vacation WHERE email=? AND domain=?',

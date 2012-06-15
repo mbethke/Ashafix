@@ -1,4 +1,4 @@
-package Ashafix::Model::Mailbox;
+package Ashafix::Schema::Mailbox;
 #===============================================================================
 #
 #         FILE:  Mailbox.pm
@@ -17,7 +17,7 @@ package Ashafix::Model::Mailbox;
 
 use strict;
 use warnings;
-use parent 'Ashafix::Model::Base';
+use parent 'Ashafix::Schema::Base';
 
 our %queries = (
     check_mailbox           => "SELECT 1 FROM %table_mailbox WHERE username=? AND domain=?",

@@ -1,4 +1,4 @@
-package Ashafix::Model::Quota;
+package Ashafix::Schema::Quota;
 #===============================================================================
 #
 #         FILE:  Quota.pm
@@ -16,7 +16,7 @@ package Ashafix::Model::Quota;
 use 5.010;
 use strict;
 use warnings;
-use parent 'Ashafix::Model::Base';
+use parent 'Ashafix::Schema::Base';
 
 our %snippets = (
     delete_everything_old   => "DELETE FROM %table_quota",
@@ -44,6 +44,6 @@ sub new {
 }
 
 sub delete_everything {
-    Ashafix::Model::query($snippets{delete_everything_old});
-    Ashafix::Model::query($snippets{delete_everything_new});
+    Ashafix::Schema::query($snippets{delete_everything_old});
+    Ashafix::Schema::query($snippets{delete_everything_new});
 }

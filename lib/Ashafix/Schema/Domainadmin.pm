@@ -1,4 +1,4 @@
-package Ashafix::Model::Domainadmin;
+package Ashafix::Schema::Domainadmin;
 #===============================================================================
 #
 #         FILE:  Domainadmin.pm
@@ -17,13 +17,14 @@ package Ashafix::Model::Domainadmin;
 
 use strict;
 use warnings;
-use parent 'Ashafix::Model::Base';
+use parent 'Ashafix::Schema::Base';
 
 our %queries = (
     select_domain_count => "SELECT count(*) FROM %table_domain_admins WHERE username=? AND domain='ALL'",
     check_global_admin  => "SELECT username FROM %table_domain_admins WHERE username=? AND domain='ALL' AND active='1'",
     check_domain_owner  => "SELECT 1 FROM %table_domain_admins WHERE username=? AND (domain=? OR domain='ALL') AND active='1'",
     select_global_admin => "SELECT * FROM %table_domain_admins WHERE username=? AND domain='ALL'",
+    select_by_admin     => "SELECT * FROM %table_domain_admins WHERE username=? AND active='1'",
     insert_domadmin     => "INSERT INTO %table_domain_admins (username,domain,created) VALUES (?,?,NOW())",
     delete_by_user      => "DELETE FROM %table_domain_admins WHERE username=?",
     delete_by_domain    => "DELETE FROM %table_domain_admins WHERE domain=?",

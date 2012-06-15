@@ -1,4 +1,4 @@
-package Ashafix::Model::Aliasdomain;
+package Ashafix::Schema::Aliasdomain;
 #===============================================================================
 #
 #         FILE:  Aliasdomain.pm
@@ -16,7 +16,7 @@ package Ashafix::Model::Aliasdomain;
 
 use strict;
 use warnings;
-use parent 'Ashafix::Model::Base';
+use parent 'Ashafix::Schema::Base';
 
 our %queries = (
     delete_by_alias     => "DELETE FROM %table_alias_domain WHERE alias_domain=?",
@@ -41,7 +41,7 @@ our %snippets = (
 
 sub select_by_domain {
     my ($self, $domain, $display, $page_size) = @_;
-    return Ashafix::Model::query($snippets{select_by_domain}, $domain, $domain, $display, $page_size);
+    return Ashafix::Schema::query($snippets{select_by_domain}, $domain, $domain, $display, $page_size);
 }
 
 1;

@@ -175,13 +175,17 @@ sub setup_model {
     my $self = shift;
     my $config = $self->config('database');
     my $model = Ashafix::Model->new(
-        dsn         => "DBI:$config->{type}:database=$config->{name};host=$config->{host}",
-        user        => $config->{user},
-        password    => $config->{password},
-        tabledefs   => $self->config('database_tables'),
-        newquota    => $self->config('new_quota_table'),
+        root_schema => Ashafix::Schema->new(
+            dsn         => "DBI:$config->{type}:database=$config->{name};host=$config->{host}",
+            user        => $config->{user},
+            password    => $config->{password},
+            tabledefs   => $self->config('database_tables'),
+            newquota    => $self->config('new_quota_table'),
+        ),
     );
     $self->helper(model => sub { return $model->model($_[1]) });
+    # TODO this should disappear once only models talk to schemas
+    $self->helper(schema => sub { return $model->schema($_[1]) });
 }
 
 # { controller => { action => role } }

@@ -1,4 +1,4 @@
-package Ashafix::Model::Complex;
+package Ashafix::Schema::Complex;
 #===============================================================================
 #
 #         FILE:  Complex.pm
@@ -17,7 +17,7 @@ package Ashafix::Model::Complex;
 
 use strict;
 use warnings;
-use parent 'Ashafix::Model::Base';
+use parent 'Ashafix::Schema::Base';
 use Ashafix::Model;
 
 our %queries = (
@@ -75,7 +75,7 @@ sub _all_or_in_query {
     } else {
         $sql =~ s/%where_clause/$self->sql_in_clause_bindparams(@_)/e;
     }
-    return Ashafix::Model::query($sql, @_);
+    return Ashafix::Schema::query($sql, @_);
 }
 
 sub get_domain_stats {
@@ -107,7 +107,7 @@ sub get_addresses_by_domain {
     $sql =~ s/%sql_where/$sql_where/;
     $sql =~ s/%sql_domain/$sql_domain/;
     # TODO do we need a different query for Postgres?
-    return Ashafix::Model::query($sql, @params, map { 0+$_ } @args{qw /limit offset/});
+    return Ashafix::Schema::query($sql, @params, map { 0+$_ } @args{qw /limit offset/});
     # TODO modify Postgres result:
     # $row['modified'] = date('Y-m-d H:i', strtotime($row['modified']));
     # $row['active']=('t'==$row['active']) ? 1 : 0;
@@ -171,7 +171,7 @@ sub get_mailboxes {
     
     my $sql = "$sql_select $sql_from $sql_join $sql_where ORDER BY m.username LIMIT ? OFFSET ?";
 
-    return Ashafix::Model::query($sql, @params, @args{qw/ limit offset /});
+    return Ashafix::Schema::query($sql, @params, @args{qw/ limit offset /});
     # TODO
     # if ('pgsql'==$CONF['database_type']) {
     #     // XXX

@@ -60,8 +60,10 @@ sub verify_account {
     my $roles;
     return unless defined $user and defined $pass;
     if($self->_check_password($user, $pass, 1)) {
+        print STDERR "checked password\n";
         # Found admin user
         $roles = { admin => 1, globaladmin => $self->_check_global_admin($user) };
+        print STDERR "checked password\n";
     } elsif($self->_check_password($user, $pass, 0)) {
         # Found regular user
         $roles = { user => 1 };
@@ -100,69 +102,8 @@ sub auth_require_login {
     return;
 }
 
-# Get account properties for a named account as a hash reference
-sub get_admin_properties {
-    my ($self, $name) = @_;
-    my $props = {};
-
-    if(defined $self->model('domainadmin')->select_global_admin->list) {
-        # global admin
-        $props->{domain_count} = 'ALL';
-    } else {
-        # normal domain admin
-        ($props->{domain_count}) = $self->model('domainadmin')->select_domain_count($name)->list;
-    }
-    
-    if(my $row = $self->model('admin')->select_admin($name)->hash) {
-        $props->{$_} = $row->{$_} foreach(qw/created modified active/);
-        # TODO handle pgsql?
-        #    if ('pgsql'==$CONF['database_type']) {
-        #        $list['active'] = ('t'==$row['active']) ? 1 : 0;
-        #        $list['created']= gmstrftime('%c %Z',$row['uts_created']);
-        #        $list['modified']= gmstrftime('%c %Z',$row['uts_modified']);
-        #    }
-    }
-    return $props;
-}
-
 sub generate_password {
     return substr(Digest::MD5::md5_base64(rand),0,10)
-}
-
-# Check a password's kwalitee. If Crypt::Cracklib is not available, anything
-# with at least 6 characters is fine.
-# Dies with a reason in $@ on check failure.
-sub validate_password {
-    my ($self, $pw) = @_;
-    # Don't bother with all these hand-written regexen and use trusty ol'
-    # Cracklib if available. If not, Bad Luck[tm].
-    eval "use Crypt::Cracklib ();";
-    if($@) {
-        6 <= length $pw and return 1;
-        die "it is too short\n";
-    }
-    my $result = Crypt::Cracklib::fascist_check($pw);
-    die "$result\n" unless $result eq 'ok';
-}
-
-sub get_domain_properties {
-    my ($self, $domain) = @_;
-    my %props;
-    my $res = $self->model('domain')->get_domain_props($domain)->hash;
-    %props = (
-        alias_count   => $self->model('alias')->count_domain_aliases($domain)->flat->[0],
-        mailbox_count => $self->model('mailbox')->count_domain_mailboxes($domain)->flat->[0],
-        quota_sum     => $self->model('mailbox')->get_domain_quota($domain)->flat->[0],
-        map { $_ => $res->{$_} } qw/ description aliases mailboxes maxquota quota transport backupmx created modified active /
-        # TODO if ($CONF['database_type'] == "pgsql") {
-        # $list['active']=('t'==$row['active']) ? 1 : 0;
-        # $list['backupmx']=('t'==$row['backupmx']) ? 1 : 0;
-        # $list['created']= gmstrftime('%c %Z',$row['uts_created']);
-        # $list['modified']= gmstrftime('%c %Z',$row['uts_modified']);
-        # }
-    );
-    $props{alias_count} -= $props{mailbox_count}; 
-    return \%props;
 }
 
 sub get_domains_for_user {
@@ -178,16 +119,6 @@ sub divide_quota {
     return unless defined $quota;
     return $quota if -1 == $quota;
     return sprintf("%.2d", ($quota / $self->cfg('quota_multiplier')) + 0.05);
-}
-
-# Recalculate mailbox quota to megabytes
-sub multiply_quota {
-    my ($self, $quota) = @_;
-
-    return unless defined $quota;
-    print STDERR "multiply_quota(`$quota')\n";
-    return $quota if -1 == $quota;
-    return $quota * $self->cfg('quota_multiplier');
 }
 
 sub check_domain_owner {
@@ -279,11 +210,12 @@ sub db_log {
 # for verification status.
 sub _check_password {
     my ($self, $user, $pass, $admin) = @_;
-    my $stored_pass = $self->model($admin ? 'admin' : 'mailbox')->get_password($user)->list;
+    # TODO simplify after updating the mailbox model
+    my $stored_pass = $admin ? $self->model('admin')->load($user)->password : $self->model('mailbox')->load($user)->password;
     return defined $stored_pass && $self->app->pacrypt($pass, $stored_pass) eq $stored_pass;
 }
 
 # Return a true value if the passed-in user is a global admin
-sub _check_global_admin { defined $_[0]->model('domainadmin')->check_global_admin($_[1])->list }
+sub _check_global_admin { defined $_[0]->schema('domainadmin')->check_global_admin($_[1])->list }
 
 1;
