@@ -6,6 +6,7 @@ use Try::Tiny;
 
 sub create {
     my $self = shift;
+    my $m = $self->model('admin');
     my @render_params = (
         pAdminCreate_admin_username_text => $self->l('pAdminCreate_admin_username_text'),
         domains                          => [ $self->schema('domain')->get_real_domains->flat ],
@@ -17,16 +18,16 @@ sub create {
         when('POST') {
             my $bp = $self->req->body_params;
             try {
-                my $admin = $self->model('admin')->create(
+                my $admin = $m->create(
                     name    => $bp->param('username'),
                     pw1     => $bp->param('pw1'),
                     pw2     => $bp->param('pw2'),
-                    split / /, ($bp->param('domains') // '')
+                    domains => [ split / /, ($bp->param('domains') // '') ],
                 );
                 $admin->messages and $self->show_info($admin->messages);
             } catch {
-                warn "Exception while trying to create admin";
-                $self->show_error($_) for(@$_);
+                warn "Exception while trying to create admin: $_";
+                #$self->show_error($_) for(@{$m->messages});
             };
         }
         default {

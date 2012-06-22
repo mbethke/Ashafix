@@ -16,7 +16,6 @@
 
 package Ashafix;
 use Mojo::Base 'Mojolicious';
-
 use Carp;
 use MojoX::Renderer::TT;
 use Mojolicious::Plugin::Config;
@@ -26,7 +25,8 @@ use Data::Dumper;
 use Template::Constants;
 use Crypt::PasswdMD5 ();
 use Digest::MD5 ();
-
+#use FindBin;
+#use lib "$FindBin::Bin/../lib";
 my $VERSION = '0.0.1';
 
 sub startup {
@@ -73,6 +73,7 @@ sub setup_plugins {
     $self->controller_class('Ashafix::Controller');
 
     # Setup signed sessions
+    $self->plugin('Mojolicious::Plugin::FrozenSessions' => {});
     $self->app->secret($config->{secret});
     #$self->sessions->cookie_domain('localhost');    # TODO configurable
     $self->sessions->cookie_name('ashafix');
@@ -175,6 +176,7 @@ sub setup_model {
     my $self = shift;
     my $config = $self->config('database');
     my $model = Ashafix::Model->new(
+        app         => $self,
         root_schema => Ashafix::Schema->new(
             dsn         => "DBI:$config->{type}:database=$config->{name};host=$config->{host}",
             user        => $config->{user},
@@ -299,5 +301,6 @@ sub pacrypt {
     
     die "unknown/invalid encrypt setting: $algo";
 }
+
 
 1;

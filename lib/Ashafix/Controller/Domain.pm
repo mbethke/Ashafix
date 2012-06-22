@@ -111,42 +111,34 @@ sub delete {
 
 sub list {
     my $self = shift;
-    my ($admin_properties, $is_globaladmin, $username, @admins, @domains);
-
-    my $model = $self->model('complex');
+    my ($admin, $is_globaladmin, $username, @admins, @domains);
 
     if($self->auth_has_role('globaladmin')) {
         $is_globaladmin = 1;
         # Global admins can see all other admins' domains
-        @admins = $self->model('admin')->get_all_admin_names->flat;
-        $username = $self->param('username');
-        if($username) {
-            $admin_properties = $self->get_admin_properties($username);
-        }
+        @admins = $self->model('admin')->list;
+        $username = $self->param('username')
+            and $admin = $self->model('admin')->load($username);
     } else {
-        @admins  = $self->auth_get_username;  # only one element
+        @admins = $self->auth_get_username;  # only one element
     }
 
-    if($is_globaladmin or ($admin_properties and 'ALL' eq $admin_properties->{domain_count})) {
+    # TODO is the "or" clause needed?
+    if($is_globaladmin or ($admin and 'ALL' eq $admin->domain_count)) {
         @domains = 'ALL';
     } elsif(defined $username and length $username) {
-        @domains = $model->get_domains_for_admin($username);
+        @domains = @{$admin->domains};
     } elsif($is_globaladmin) {
         @domains = 'ALL';
     } else {
-        @domains = $model->get_domains_for_admin($self->auth_get_username);
+        @domains = @{$self->model('admin')->load($self->auth_get_username)->domains};
     }
 
-    my %domain_props = map {
-        # TODO map pgsql booleans to standard form
-        ( $_->{domain} => $_ )
-    } $model->get_domain_stats(@domains)->hashes;
-    $domain_props{$_->{domain}}{alias_count} = $_->{alias_count}
-        foreach $model->get_aliases_per_domain(@domains)->hashes;
+    my $domain_props = $self->model('domain')->stats(@domains);
 
     return $self->render(
         admins => \@admins,
-        domainprops => \%domain_props,
+        domainprops => $domain_props,
         user => { roles => $self->session('roles') },
     ); 
 }

@@ -17,9 +17,7 @@ package Ashafix::Controller;
 #===============================================================================
 use 5.010;
 use Mojo::Base 'Mojolicious::Controller';
-use Digest::MD5;
 use URI::Escape;
-use Email::Valid;
 use Carp;
 
 # Show error/info in page header of current or redirected-to page
@@ -46,40 +44,17 @@ sub _add_flash  {
 }
 # Get the currently logged in user
 sub auth_get_username {
-    my $self = shift;
-    my $user = $self->session('user') or return;
-    return $user->{name};
+    my $user = shift->session('user') or return;
+    return $user->name;
 }
 
-
-# Takes a user name and a password and returns a user info structure
-# or undef on verification failure
-# TODO put this into the model and make the return a proper user object
-sub verify_account {
-    my ($self, $user, $pass) = @_;
-    my $roles;
-    return unless defined $user and defined $pass;
-    if($self->_check_password($user, $pass, 1)) {
-        print STDERR "checked password\n";
-        # Found admin user
-        $roles = { admin => 1, globaladmin => $self->_check_global_admin($user) };
-        print STDERR "checked password\n";
-    } elsif($self->_check_password($user, $pass, 0)) {
-        # Found regular user
-        $roles = { user => 1 };
-    } else {
-        # Verification unsuccessful
-        return;
-    }
-    return { name => $user, roles => $roles };
-}
 
 # Takes a user role and returns a boolean indicating whether current user
 # has this role
 sub auth_has_role {
     my ($self, $role) = @_;
     my $user = $self->session('user') or return;
-    return $user->{roles}{$role};
+    return $user->roles->{$role};
 }
 
 # Requires user to have a certain role. On failure, false is returned
@@ -89,7 +64,7 @@ sub auth_require_role {
     return unless $self->auth_require_login;
     return 1 if $self->auth_has_role($role);
     # TODO flash() "Insufficient privileges" or something?
-    $self->redirect_to(named => 'login');
+    $self->redirect_to(named => 'login', redirect => $self->url_with);
     return;
 }
 
@@ -97,13 +72,9 @@ sub auth_require_role {
 sub auth_require_login {
     my $self = shift;
     my $user = $self->session('user');
-    return 1 if defined $user->{name};
-    $self->redirect_to(named => 'login');
+    return 1 if defined($user) && defined($user->name);
+    $self->redirect_to(named => 'login', redirect => $self->url_with);
     return;
-}
-
-sub generate_password {
-    return substr(Digest::MD5::md5_base64(rand),0,10)
 }
 
 sub get_domains_for_user {
@@ -134,29 +105,6 @@ sub check_domain_owner {
     return;
 }
 
-# Check validity of an email address
-# Returns true on success , dies on error with a localized error message in $@
-sub check_email_validity {
-    my ($self, $uname) = @_;
-
-    my $mvalid = Email::Valid->new(
-        -mxcheck => $self->cfg('emailcheck_resolve_domain'),
-        -tldcheck => 1
-    );
-    warn "checking mail address `$uname'";
-    return 1 if $mvalid->address($uname);
-
-    my $err;
-    (my $domainpart = $uname) =~ s/.*\@//;
-    given($mvalid->details) {
-        when('fqdn')    { $err = sprintf($self->l('pInvalidDomainRegex'), $domainpart) }
-        when('mxcheck') { $err = sprintf($self->l('pInvalidDomainDNS'), $domainpart)   }
-        default         { $err = $self->l('pInvalidMailRegex') . ": `$uname'"  }
-    }
-    $self->show_error($err);
-    return;
-}
-
 sub check_alias_owner { 
     my ($self, $username, $alias) = @_;
 
@@ -165,6 +113,25 @@ sub check_alias_owner {
     my ($localpart) = split /\@/, $alias;
     return if(!$self->cfg('special_alias_control') and exists $self->cfg('default_aliases')->{$localpart});
     return 1;
+}
+
+# Takes a user name and a password and returns a user object 
+# or undef on verification failure
+sub verify_account {
+    my ($self, $user, $pass) = @_;
+    my $u;
+    return unless defined $user and defined $pass;
+
+    $u = $self->model('admin')->load($user)
+        and $self->_compare_passwords($pass, $u->password) and return $u;
+    $u = $self->model('mailbox')->load($user)
+        and $self->_compare_passwords($pass, $u->password) and return $u;
+    return;
+}
+
+sub _compare_passwords {
+    my ($self, $pass_clear, $pass_crypt) = @_;
+    return $self->app->pacrypt($pass_clear, $pass_crypt) eq $pass_crypt;
 }
 
 # Log actions to database
@@ -203,16 +170,6 @@ sub db_log {
     my $remote_addr = $self->tx->remote_address;
     my $username = $self->auth_get_username;
     return 1 == $self->model('log')->insert("$username ($remote_addr)", $domain, $action, $data)->rows;
-}
-
-# Takes a username/password pair and a boolean value indicating whether
-# to look for admins (true) or users (false). Returns a boolean value
-# for verification status.
-sub _check_password {
-    my ($self, $user, $pass, $admin) = @_;
-    # TODO simplify after updating the mailbox model
-    my $stored_pass = $admin ? $self->model('admin')->load($user)->password : $self->model('mailbox')->load($user)->password;
-    return defined $stored_pass && $self->app->pacrypt($pass, $stored_pass) eq $stored_pass;
 }
 
 # Return a true value if the passed-in user is a global admin

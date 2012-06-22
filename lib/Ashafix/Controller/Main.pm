@@ -8,17 +8,18 @@ sub index {
 }
 
 sub login {
-    my $self = shift;
-    my $name = $self->param('username');
-    my $pass = $self->param('password');
+    my $self    = shift;
+    my $name    = $self->param('username');
+    my $pass    = $self->param('password');
+    my $redir   = $self->param('redirect');
 
     return $self->render unless defined $name and defined $pass;
 
-    my $userinfo = $self->verify_account($name, $pass);
-    if($userinfo) {
+    my $user = $self->verify_account($name, $pass);
+    if($user) {
         # Login successful
-        $self->session('user', $userinfo);
-        $self->redirect_to('index');
+        $self->session('user', $user);
+        $self->redirect_to($redir || 'index');
     } else {
         # Login failed
         $self->show_error_l('pLogin_failed');
