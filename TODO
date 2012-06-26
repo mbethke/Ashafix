@@ -5,12 +5,14 @@
   instead of selecting them by what "usually looks the right size" 
 - Fatten the Model classes with more business logic that shouldn't be in the
   Controllers and unify them to represent actual business objects rather than
-  individual tables.
+  individual tables. This has been started in the "newmodel" branch already.
 - Remove the rest of silly distinctions between PHP->Form and Form->PHP variable names
-  f* and t*
+  f* and t*, if there should be any left by now.
 - Decide whether to use whitespace-chomping TT tags (source looks better, more work)
   or aggressively chomp using TT options (smaller)
 - Refactor the whole mess to smaller testable units
+- Write more tests!
 - Implement account creation/deletion hooks
 - Properly support Postgres (http://www.chrisspen.com/blog/enabling-implicit-cast-from-integer-to-boolean-in-postgresql.html might help)
-- Check templates for proper HTML entity filtering
+- Check templates for proper HTML entity filtering, there are probably still a
+  lot of XSS-exploitable bugs.

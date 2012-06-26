@@ -1,9 +1,10 @@
 This is a port of Postfixadmin to Perl/Mojolicious/TemplateToolkit. It aims to
-be cleaner, following an MVC pattern and strict modularization throughout, thus
-easier to extend and more secure. Most importantly it makes use of Perl's proper
-DBMS support via DBIx::Simple and thus uses none of the all too common in PHP
-way of interpolating inputs in SQL strings that gives you SQL injection
-vulnerabilities unless your manual escaping is perfect.
+be cleaner and easier to extend by following an MVC pattern and strict
+modularization throughout. By using Perl's database support via DBIx::Simple and
+prepared statements, it is automatically safe from the most common type of SQL
+injection problems that are so common in PHP applications that interpolate
+parameters directly into SQL. Cross Site Request Forgery protection comes free
+with Mojolicious as well.
 
 This is very much a work in progress. Currently a lot of functionality is still
 missing but basic functions such as creating/editing/deleting domains and
@@ -13,10 +14,12 @@ Homepage: http://ashafix.net/
 
 Notes:
 
-- Requires at least version 2.3 of the database, particularly regarding domain entries for global admins in the domainadmin table.
+- Requires at least version 2.3 of the Postfixadmin database, particularly
+  regarding domain entries for global admins in the domainadmin table. In the
+  end it will use its own schema that will however be compatible insofar as
+  you can use the same SQL on the Postfix side.
 - The MySQL database uses InnoDB for transactions and referential integrity
   constraints. With databases this size, there is hardly any excuse for using
   MyISAM today.
 - Postgres support is still broken but the above should simplify the task of
-  getting it to work. I'm still thinking about going DBIx::Class to abstract it
-  away.
+  getting it to work.
