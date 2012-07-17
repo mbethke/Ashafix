@@ -25,6 +25,7 @@ sub create {
     my $self = shift;
     my %opts = @_; # we still need to look at parameters that don't correspond to attributes
     my $r = Ashafix::Result::Admin->new(@_);
+    my $schema = $self->schema('admin');
     my $name = $r->name;
 
     use Data::Dumper;
@@ -33,7 +34,7 @@ sub create {
     $self->throw('pAdminCreate_admin_username_text_error2')
     if(!defined $name
             or '' eq $name
-            or defined $self->schema('admin')->select_admin($name)->flat->[0]);
+            or defined $schema->select_admin($name)->flat->[0]);
 
     $self->throw('pAdminCreate_admin_username_text_error1')
     unless $self->check_email_validity($name);
@@ -47,14 +48,14 @@ sub create {
     $r->roles->{globaladmin} = 1 if grep { $_ eq 'ALL' } @{$r->domains};
 
     try {
-        1 == $self->schema('admin')->insert_admin($name, $r->password)->rows or die;
-        foreach my $dom (@{$self->domains}) {
+        1 == $schema->insert_admin($name, $r->password)->rows or die $self->schema_err;
+        foreach my $dom (@{$r->domains}) {
             # TODO error checking?
             $self->schema('domainadmin')->insert_domadmin($name, $dom);
         }
     } catch {
         # TODO localize
-        $self->throw('', 'Could not create admin!');
+        $self->throw('', "Could not create admin: $_");
     };
     return $r;
 }

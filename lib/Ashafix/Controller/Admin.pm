@@ -24,7 +24,7 @@ sub create {
                     pw2     => $bp->param('password2'),
                     domains => [ split / /, ($bp->param('domains') // '') ],
                 );
-                $admin->messages and $self->show_info($admin->messages);
+                $self->show_info_l('pAdminCreate_admin_result_success');
             } catch {
                 warn "Caught exception in Ashafix::Controller::Admin::create: $_";
                 my $msg = $self->handle_exception($_);
