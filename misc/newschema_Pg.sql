@@ -68,7 +68,7 @@ CREATE TABLE domain_admins (
   domain varchar(255) NOT NULL,
   created datetime NOT NULL DEFAULT '0000-00-00 00:00:00',
   active boolean NOT NULL DEFAULT 't',
-  PRIMARY KEY username (username),
+  PRIMARY KEY username_domain (username,domain),
   FOREIGN KEY domain (domain) REFERENCES domain (domain) ON DELETE CASCADE
 ) COMMENT='Ashafix Domain Admins';
 

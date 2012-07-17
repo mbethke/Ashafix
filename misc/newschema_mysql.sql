@@ -69,7 +69,7 @@ CREATE TABLE domain_admins (
   domain varchar(255) NOT NULL,
   created datetime NOT NULL DEFAULT '0000-00-00 00:00:00',
   active tinyint NOT NULL DEFAULT '1',
-  PRIMARY KEY username (username),
+  PRIMARY KEY username_domain (username,domain),
   FOREIGN KEY domain (domain) REFERENCES domain (domain) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Ashafix Domain Admins';
 
