@@ -60,6 +60,9 @@ sub schema {
     return $self->{modules}{$schema // ''} || croak "Unknown schema `$schema'";
 }
 
+# Return the DBI error string for the last query
+sub error { $DB->error }
+
 # Return a list of avaialable schema names
 # Probably only for test code
 sub schemas { return grep { $_ ne '' } keys %{$_[0]->{modules}} }

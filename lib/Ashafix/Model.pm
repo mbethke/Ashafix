@@ -52,6 +52,9 @@ sub schema {
     return $self->root_schema->schema($schema) || croak "Unknown schema `$schema'";
 }
 
+# Return why the last schema call failed
+sub schema_err { shift->root_schema->error }
+
 # Return a list of avaialable model names
 # Probably only for test code
 sub models { return grep { $_ ne '' } keys %{$_[0]->{modules}} }
