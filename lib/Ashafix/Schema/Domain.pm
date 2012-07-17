@@ -20,7 +20,6 @@ use warnings;
 use parent 'Ashafix::Schema::Base';
 
 our %queries = (
-    check_domain        => "SELECT 1 FROM %table_domain WHERE domain=?",
     get_domain_props    => "SELECT * FROM %table_domain WHERE domain=?",
     #TODO get_domain_props_pg => "SELECT *, EXTRACT(epoch FROM created) AS uts_created, EXTRACT(epoch FROM modified) AS uts_modified FROM %table_domain WHERE domain=?"
     get_real_domains    => "SELECT domain FROM %table_domain WHERE domain != 'ALL' ORDER BY domain",

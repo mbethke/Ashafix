@@ -43,11 +43,11 @@ sub setup_plugins {
     # Load config, keep a copy of the data structure for now
     my $config = $self->plugin(Config => {file => 'ashafix.conf' });
     # Helper for quick config access
-    $self->helper(cfg => sub { $_[0]->stash('config')->{$_[1]} });
+    $self->helper(cfg => sub { $self->defaults($_[1]) });
 
-    # Cross Site Request Forgery protection
-    # TODO smarter method to disable during testing?
-    $self->plugin('Mojolicious::Plugin::CSRFDefender') unless $ENV{TESTING};
+    # Cross Site Request Forgery protection interferes with testing so
+    # only enable it in production
+    $self->plugin('Mojolicious::Plugin::CSRFDefender') if('production' eq $self->mode);
     
     # Load Template Toolkit and set as default
     $self->plugin(
@@ -185,9 +185,9 @@ sub setup_model {
             newquota    => $self->config('new_quota_table'),
         ),
     );
-    $self->helper(model => sub { return $model->model($_[1]) });
+    $self->helper(model => sub { $model->model($_[1]) });
     # TODO this should disappear once only models talk to schemas
-    $self->helper(schema => sub { return $model->schema($_[1]) });
+    $self->helper(schema => sub { $model->schema($_[1]) });
 }
 
 # { controller => { action => role } }

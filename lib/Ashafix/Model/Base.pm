@@ -21,7 +21,7 @@ use Carp qw/ croak /;
 use Digest::MD5;
 use Email::Valid;
 
-has [qw/ app root_schema messages /];
+has [qw/ app root_schema /];
 
 # Get a schema object by name
 sub schema {
@@ -32,25 +32,13 @@ sub schema {
 # Logging shortcut
 sub dblog { shift->app->db_log(@_) }
 
-# Localization shortcut
-sub l { shift->app->l(@_) }
-
 # Config shortcut
 sub cfg { shift->app->cfg(@_) }
 
-# Throw an exception, putting one or more error messages in the
-# 'messages' attribute. The first one will also end up in the exception object.
+# Throw an exception with one argument
 sub throw {
     my $self = shift;
-    $self->messages( [@_] );
-    die Mojo::Exception->new->trace(2)->_detect($_[-1]);
-}
-
-# Like throw() but excpects localization keys as messages
-sub throwl {
-    my $self = shift;
-    $self->messages( [map { $self->app->l($_) } @_] );
-    die Mojo::Exception->new->trace(2)->_detect($self->messages->[-1]);
+    die Mojo::Exception->new->trace(2)->message(@_ > 1 ? [ @_ ] : $_[0]);
 }
 
 # ==== Submethods used in several models ====
@@ -85,13 +73,13 @@ sub check_password {
         $pw1 = $self->generate_password; 
         $pass_generated = 1;
     } elsif(not length $pw1 or not length $pw2 or $pw1 ne $pw2) {
-        $self->throwl('pCreate_mailbox_password_text_error');
+        $self->throw('pCreate_mailbox_password_text_error');
     } else {
         try {
             $self->check_password_kwalitee($pw1)
         } catch {
             # TODO localize
-            $self->throw("Password check failed: $@");
+            $self->throw('', "Password check failed: $@");
         };
     }
     return ($pw1, $pass_generated);
@@ -125,19 +113,14 @@ sub check_email_validity {
     warn "checking mail address `$uname'";
     return 1 if $mvalid->address($uname);
 
-    my $err;
     (my $domainpart = $uname) =~ s/.*\@//;
-    given($mvalid->details) {
-        when('fqdn')    { $err = sprintf($self->l('pInvalidDomainRegex'), $domainpart) }
-        when('mxcheck') { $err = sprintf($self->l('pInvalidDomainDNS'), $domainpart)   }
-        default         { $err = $self->l('pInvalidMailRegex') . ": `$uname'"  }
+    for($mvalid->details) {
+        when('fqdn')    { $self->throw(pInvalidDomainRegex  => $domainpart) }
+        when('mxcheck') { $self->throw(pInvalidDomainDNS    => $domainpart) }
+        default         { $self->throw(pInvalidMailRegex    => ": `$uname'")}
     }
-    $self->show_error($err);
-    return;
 }
 
 sub generate_password { substr(Digest::MD5::md5_base64(rand),0,10) }
-
-
 
 1;

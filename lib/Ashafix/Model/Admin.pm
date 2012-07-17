@@ -27,14 +27,20 @@ sub create {
     my $r = Ashafix::Result::Admin->new(@_);
     my $name = $r->name;
 
-    (!defined $name or '' eq $name
-            or defined $self->schema('admin')->select_admin($name)->flat->[0])
-        and Mojo::Exception->throw($self->l('pAdminCreate_admin_username_text_error2'));
-    $self->_check_email_validity($name)
-        or Mojo::Exception->throw($self->l('pAdminCreate_admin_username_text_error1'));
+    use Data::Dumper;
+    print STDERR "OPTS: ",Dumper(\%opts);
 
-    my $passwd  = $self->check_passwords($opts{pw1}, $opts{pw2});
-    $r->password($self->pacrypt($passwd));
+    $self->throw('pAdminCreate_admin_username_text_error2')
+    if(!defined $name
+            or '' eq $name
+            or defined $self->schema('admin')->select_admin($name)->flat->[0]);
+
+    $self->throw('pAdminCreate_admin_username_text_error1')
+    unless $self->check_email_validity($name);
+
+    my $passwd  = $self->_check_passwords($opts{pw1}, $opts{pw2});
+    # TODO move pacrypt into Model::Base?
+    $r->password($self->app->pacrypt($passwd));
     
     # Determine admin's roles---'admin' is for granted
     $r->roles({ admin => 1 });
@@ -48,7 +54,7 @@ sub create {
         }
     } catch {
         # TODO localize
-        $self->throw('Could not create admin!');
+        $self->throw('', 'Could not create admin!');
     };
     return $r;
 }
@@ -82,7 +88,7 @@ sub delete {
     my ($self, $who) = @_;
     blessed($who) and $who->isa('Ashafix::Result::Admin') and $who = $who->name;
     $self->check_email_validity($who)
-        or $self->throwl('pAdminDelete_admin_error');
+        or $self->throw('pAdminDelete_admin_error');
     # Deletion of dependent domains is taken care of by the database
     return $self->schema('admin')->delete($who)->rows;
 }
@@ -102,7 +108,7 @@ sub _check_passwords {
         if('' eq $pw1 and '' eq $pw2 and $self->app->cfg('generate_password')) {
             return $self->generate_password;
         } else {
-           $self->throwl('pAdminCreate_admin_username_text');
+           $self->throw('pAdminCreate_admin_password_text_error');
         }
     }
     return $pw1;

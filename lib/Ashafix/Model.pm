@@ -31,10 +31,7 @@ sub new {
     my %args = @_;
     my $self = $class->SUPER::new(@_);
 
-    my $modules = [
-        grep { $_ ne 'Ashafix::Model::Base' } @{Mojo::Loader->search('Ashafix::Model')}
-    ];
-    foreach my $pm (@$modules) {
+    foreach my $pm (grep { $_ ne 'Ashafix::Model::Base' } @{Mojo::Loader->search('Ashafix::Model')}) {
         my $e = Mojo::Loader->load($pm);
         croak "Loading `$pm' failed: $e" if ref $e;
         my ($basename) = $pm =~ /.*::(.*)/;

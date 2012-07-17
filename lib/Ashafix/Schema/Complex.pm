@@ -171,7 +171,7 @@ sub get_mailboxes {
     
     my $sql = "$sql_select $sql_from $sql_join $sql_where ORDER BY m.username LIMIT ? OFFSET ?";
 
-    return Ashafix::Schema::query($sql, @params, @args{qw/ limit offset /});
+    return Ashafix::Schema::query($sql, @params, $args{limit}//0, $args{offset}//0);
     # TODO
     # if ('pgsql'==$CONF['database_type']) {
     #     // XXX

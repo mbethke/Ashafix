@@ -62,12 +62,12 @@ sub list {
     $self->session(list_virtual_sticky_domain => $domain);
 
     if($self->cfg('alias_domain')) {
-        @alias_domains = $self->model('aliasdomain')->select_by_domain($domain, $page_size, $display)->hashes;
+        @alias_domains = $self->schema('aliasdomain')->select_by_domain($domain, $page_size, $display)->hashes;
         $can_create_alias_domain = none { $_->{target_domain} eq $domain } @alias_domains;
         # TODO: set $can_create_alias_domain = 0; if all domains (of this admin) are already used as alias domains
     }
 
-    @aliases = $self->model('complex')->get_addresses_by_domain(
+    @aliases = $self->schema('complex')->get_addresses_by_domain(
         search  => $search,
         domain  => $domain,
         offset  => $display,
@@ -75,7 +75,7 @@ sub list {
         domains => [ @allowed_domains ],
     )->hashes;
 
-    @mailboxes = $self->model('complex')->get_mailboxes(
+    @mailboxes = $self->schema('complex')->get_mailboxes(
             search  => $search,
             domain  => $domain,
             offset  => $display,
@@ -116,25 +116,25 @@ sub list {
         $display_up_show,
         $display_next, $display_next_show);
 
-    my $limit = $self->get_domain_properties($domain);
+    my $dom = $self->model('domain')->load($domain);
 
     if($display >= $page_size) {
         $display_back_show = 1;
         $display_back = $display - $page_size;
     }
-    $display_up_show = ($limit->{alias_count} > $page_size or $limit->{mailbox_count} > $page_size);
+    $display_up_show = ($dom->alias_count > $page_size or $dom->mailbox_count > $page_size);
     if(
-        (($display + $page_size) < $limit->{alias_count}) or
-        (($display + $page_size) < $limit->{mailbox_count}))
+        (($display + $page_size) < $dom->alias_count) or
+        (($display + $page_size) < $dom->mailbox_count))
     {
         $display_next_show = 1;
         $display_next = $display + $page_size;
     }
-    $can_add_alias   = (0 == $limit->{aliases}   or $limit->{alias_count}   < $limit->{aliases});
-    $can_add_mailbox = (0 == $limit->{mailboxes} or $limit->{mailbox_count} < $limit->{mailboxes});
+    $can_add_alias   = (0 == $dom->aliases   or $dom->alias_count   < $dom->aliases);
+    $can_add_mailbox = (0 == $dom->mailboxes or $dom->mailbox_count < $dom->mailboxes);
 
-    if(0 == $limit->{mailboxes}) {
-        $limit->{$_} = $self->eval_size($limit->{$_}) foreach(qw/ aliases mailboxes maxquota /);
+    if(0 == $dom->mailboxes) {
+        $dom->$_($self->eval_size($dom->$_)) foreach(qw/ aliases mailboxes maxquota /);
     }
 
     foreach my $alias (@aliases) {
@@ -158,7 +158,7 @@ sub list {
         mailboxes           => \@mailboxes,
         aliases             => \@aliases,
         aliasdomains        => \@alias_domains,
-        limit               => $limit,
+        limit               => $dom,
         can_add_alias       => $can_add_alias,
         can_add_mailbox     => $can_add_mailbox,
         display_back        => $display_back,

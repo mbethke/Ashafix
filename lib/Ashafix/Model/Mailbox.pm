@@ -14,8 +14,7 @@ package Ashafix::Model::Mailbox;
 #===============================================================================
 
 use Mojo::Base 'Ashafix::Model::Base'; 
- 
-has [qw/ name password roles /];
+use Ashafix::Result::Mailbox;
 
 sub create {
     my ($self, $params) = @_;
@@ -25,14 +24,40 @@ sub create {
     $self->_create_mailbox($params);
 }
 
+sub load {
+    my ($self, $name) = @_;
+    my $r = Ashafix::Result::Mailbox->new(@_);
+
+    $r->name($name);
+    my ($local, $domain) = split /\@/, $name;
+    my ($data) = $self->schema('mailbox')->get_mailbox_data($name, $domain)->hashes;
+    if($data) {
+        $self->$_($data->{$_}) for(qw / name password created modified active /);
+        $self->roles->{user} = 1;
+    };
+    
+    return $r;
+}
+
+sub delete {
+    my ($self, $who) = @_;
+    die "unimplemented";
+}
+
 # Check all mailbox creation arguments for validity
 sub _create_check_params {
     my ($self, $par) = @_;
 
+    try {
+        $self->check_email_validity($par->{username_dom});
+    } catch {
+        $self->throw('pCreate_mailbox_username_text_error1');
+    };
+
     $self->_create_check_username($par);
 
     $self->_check_mailbox_creation($par->{domain})
-        or $self->throwl('pCreate_mailbox_username_text_error3');
+        or $self->throw('pCreate_mailbox_username_text_error3');
 
     ($par->{password}, $par->{pass_generated}) = $self->_check_password($par);
 
@@ -40,11 +65,11 @@ sub _create_check_params {
     $self->cfg('quota')
         and !$self->check_quota(@$par{qw/ quota domain /})
     # Not enough quota for domain to accomodate the specified amount
-        and $self->throwl('pCreate_mailbox_quota_text_error');
+        and $self->throw('pCreate_mailbox_quota_text_error');
 
     @{[$self->schema('alias')->get_goto_by_address($par->{username_dom})->flat]}
     # Mailbox already exists
-        and $self->throwl('pCreate_mailbox_username_text_error2');
+        and $self->throw('pCreate_mailbox_username_text_error2');
 
     return 1;
 }
@@ -83,6 +108,7 @@ sub _create_mailbox {
     my $password = $c->app->pacrypt($par->{password});
     $par->{quota} = $self->_multiply_quota($par->{quota}) // 0;
 
+
     $par->{active} = 'on' eq $par->{active} ? 1 : 0;
     # TODO support Postgres' transactions (db_query('BEGIN');)
 
@@ -103,47 +129,15 @@ sub _create_mailbox {
             );
         } else {
             # TODO db_query('ROLLBACK');
-            # TODO get rid of HTML here
-            $self->throw($self->l('pCreate_mailbox_result_error') . " ($par->{username_dom})");
+            $self->throw('pCreate_mailbox_result_error', " ($par->{username_dom})");
             return;
         }
     } else {
-        $self->throw($self->l('pAlias_result_error'), " ($par->{username_dom} -> $par->{username_dom})");
+        $self->throw('pAlias_result_error', " ($par->{username_dom} -> $par->{username_dom})");
         # TODO db_query('ROLLBACK');
         return;
     }
     return 1;
-}
-
-sub _welcome_mail {
-    my ($self, $to) = @_;
-    my $ok = 1;
-
-    try {
-        eval "use MIME::Lite";
-        die if $@;
-    } catch {
-        $self->show_error_l('pSendmail_result_error' . "(module MIME::Lite not installed)");
-        $ok = 0
-    };
-    return unless $ok;
-
-    my $msg = MIME::Lite->new(
-        From    => $self->cfg('admin_email') || $self->auth_get_username,
-        To      => $to,
-        Subject => $self->l('pSendmail_subject_text'),
-        Type    => 'text/plain',
-        Data    => $self->cfg('welcome_text'), 
-    );
-    try {
-        $msg->send('smtp', $self->cfg('smtp_server') || 'localhost',
-            Port    => $self->cfg('smtp_port') || 25,
-            Timeout => 30,
-        );
-        $self->show_info_l('pSendmail_result_success');
-    } catch {
-        $self->show_error_l('pSendmail_result_error', "($_)");
-    };
 }
 
 # Returns allowable quota for a mailbox, taking domain quota into account
@@ -189,20 +183,6 @@ sub _permitted_domain {
     # TODO WTF does that mean?
     return ($domain, $self->_allowed_quota($domain, 0));
 }
-
-# Check user name for validity and domain ownership. Returns 1 on success,
-# throws localized exception on error.
-sub _create_check_username {
-    my ($self, $par) = @_;
-    my $c = $self->controller;
-
-    length $par->{username}
-        and $c->check_domain_owner($par->{username_dom}, $par->{domain})
-        and $self->check_email_validity($par->{username_dom})
-        and return 1;
-    $self->throwl('pCreate_mailbox_username_text_error1');
-}
-
 
 # Delete a mailbox without any transactional protection; run postdeletion script
 sub _delete_mailbox {

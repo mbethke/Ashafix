@@ -20,14 +20,16 @@ sub create {
             try {
                 my $admin = $m->create(
                     name    => $bp->param('username'),
-                    pw1     => $bp->param('pw1'),
-                    pw2     => $bp->param('pw2'),
+                    pw1     => $bp->param('password'),
+                    pw2     => $bp->param('password2'),
                     domains => [ split / /, ($bp->param('domains') // '') ],
                 );
                 $admin->messages and $self->show_info($admin->messages);
             } catch {
-                warn "Exception while trying to create admin: $_";
-                #$self->show_error($_) for(@{$m->messages});
+                warn "Caught exception in Ashafix::Controller::Admin::create: $_";
+                my $msg = $self->handle_exception($_);
+                warn "MSG: `$msg'";
+                $self->show_error($self->handle_exception($_));
             };
         }
         default {

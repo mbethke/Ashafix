@@ -42,6 +42,26 @@ sub _add_flash  {
     my $msgs = $self->flash($what) // [];
     $self->flash($what => [@$msgs, $msg]);
 }
+
+# Return a localized message for a Mojo::Exception
+sub handle_exception {
+    my ($self, $e) = @_;
+    my $msg = $e->message;
+
+    warn "handle_exception($msg) (ref:`".(ref $msg)."'".(ref $msg?" => [@$msg]":'');
+    # Is it a non-ref that just needs to be localized?
+    ref $msg eq '' and return $self->l($msg);
+    # Should be an array that has an i18n key as the first element and
+    # arguments as the rest
+    my $localized = shift @$msg;
+    # Only localize if not the empty string (dummy for returning untranslated-as-of-yet strings)
+    $localized = $self->l($localized) if length $localized;
+    # Does it look like an sprintf-style pattern?
+    index $localized, '%' and return sprintf($localized, @$msg);
+    # No, it doesn't. Just concatenate the stuff
+    return join('', $localized, @$msg);
+}
+
 # Get the currently logged in user
 sub auth_get_username {
     my $user = shift->session('user') or return;
@@ -79,8 +99,9 @@ sub auth_require_login {
 
 sub get_domains_for_user {
     my $self = shift;
-    $self->auth_has_role('globaladmin') and return $self->model('domain')->get_real_domains->flat;
-    return $self->model('domain')->get_domains_for_admin($self->auth_get_username)->flat;
+    $self->model('domain')->list(
+        $self->auth_has_role('globaladmin') ? undef : $self->auth_get_username
+    );
 }
 
 # Recalculate mailbox quota to bytes
@@ -97,11 +118,11 @@ sub check_domain_owner {
 
     if($self->auth_has_role('globaladmin')) {
         # Global admins "own" every domain, so just check that domain actually exists
-        @{[$self->model('domain')->check_domain($domain)->flat]} and return 1;
+        $self->model('domain')->load($domain) and return 1;
         $self->show_error("Domain `$domain' does not exist");
         return;
     }
-    my @doms = $self->model('domainadmin')->check_domain_owner($user, $domain)->flat->[0] and return 1;
+    my @doms = $self->schema('domainadmin')->check_domain_owner($user, $domain)->flat->[0] and return 1;
     return;
 }
 
