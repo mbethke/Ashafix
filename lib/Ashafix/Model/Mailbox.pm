@@ -48,18 +48,12 @@ sub delete {
 sub _create_check_params {
     my ($self, $par) = @_;
 
-    try {
-        $self->check_email_validity($par->{username_dom});
-    } catch {
-        $self->throw('pCreate_mailbox_username_text_error1');
-    };
-
-    $self->_create_check_username($par);
+    $self->check_email_validity($par->{username_dom});
 
     $self->_check_mailbox_creation($par->{domain})
         or $self->throw('pCreate_mailbox_username_text_error3');
 
-    ($par->{password}, $par->{pass_generated}) = $self->_check_password($par);
+    ($par->{password}, $par->{pass_generated}) = $self->check_password($par);
 
     # TODO method missing!?
     $self->cfg('quota')

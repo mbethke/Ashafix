@@ -21,7 +21,6 @@ use parent 'Ashafix::Schema::Base';
 use Ashafix::Model;
 
 our %queries = (
-    # TODO handle pgsql booleans (db_get_boolean)
     get_domains_for_admin => "SELECT d.domain
     FROM %table_domain d
     LEFT JOIN %table_domain_admins a ON d.domain=a.domain 

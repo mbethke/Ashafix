@@ -84,7 +84,7 @@ sub stats {
 # called without argument.
 sub list {
     my ($self, $admin) = @_;
-    defined $admin and return $self->schema('domain')->get_domains_for_admin($admin)->flat;
+    defined $admin and return $self->schema('complex')->get_domains_for_admin($admin)->flat;
     return $self->schema('domain')->get_real_domains->flat;
 }
 
