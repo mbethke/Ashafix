@@ -150,6 +150,14 @@ sub verify_account {
     return;
 }
 
+# Updates a previously loaded user in the database, selecting the correct model
+# automatically
+# TODO only updates passwords so far! See models.
+sub update_user {
+    my ($self, $user) = @_;
+    $self->model($user->roles->{admin} ? 'admin' : 'mailbox')->update($user);
+}
+
 sub _compare_passwords {
     my ($self, $pass_clear, $pass_crypt) = @_;
     return $self->app->pacrypt($pass_clear, $pass_crypt) eq $pass_crypt;
