@@ -39,11 +39,11 @@ $t->post_form_ok('/domain/create' => {
 
 # Password: form
 $t->get_ok('/password')->content_like(qr#<h3>Change your login password.</h3>#);
-#$t->post_form_ok('/password' => {
-#        currentpw   => '12345678',
-#        newpw       => '1234567890',
-#        newpw2       => '1234567890',
-#    })->content_like(qr#<ul class="flash-info"><li>Your password has been changed!</li></ul>#);
+$t->post_form_ok('/password' => {
+        currentpw   => '12345678',
+        newpw       => '1234567890',
+        newpw2       => '1234567890',
+    })->content_like(qr#<ul class="flash-info"><li>Your password has been changed!</li></ul>#);
 
 exit 0;
 
