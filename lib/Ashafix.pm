@@ -147,10 +147,6 @@ sub setup_routing {
            },
         }
     );
-
-    $r->route('/sendmail')->over('login')->to('misc#sendmail')->name('mail-send');
-    $r->route('/password')->over('login')->to('misc#password')->name('passwd-change');
-    $r->route('/viewlog') ->over('login')->to('misc#viewlog') ->name('log-view');
 }
 
 sub setup_hooks {

@@ -73,14 +73,14 @@ END %]
 
 [% IF conf.sendmail; menulinknamed('mailsend', 'pMenu_sendmail', submenu_sendmail); END %]
 
-[% menulinknamed('password', 'pMenu_password') %]
+[% menulinknamed('chpassword', 'pMenu_password') %]
 
 [%# TODO if !pgsql %]
 [% IF user.roles.globaladmin and conf.backup;
-   menulinknamed('backup', 'pAdminMenu_backup');
+   menulinknamed('runbackup', 'pAdminMenu_backup');
 END %]
 
-[% menulinknamed('logview', 'pMenu_viewlog') %]
+[% menulinknamed('viewlog', 'pMenu_viewlog') %]
 [% menulinknamed('logout', 'pMenu_logout') %]
 
 </ul>
