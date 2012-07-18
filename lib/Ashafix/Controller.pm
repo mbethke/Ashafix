@@ -32,7 +32,6 @@ sub flash_error_l { shift->_localize(_add_flash => error => @_) }
 sub flash_info_l  { shift->_localize(_add_flash => info  => @_) }
 sub _localize {
     my ($self, $func, $what, $key) = splice @_,0,4;
-    print STDERR "_localize($self, $func, $what, $key)\n";
     $self->$func($what => join('', $self->l($key), @_));
 }
 
