@@ -39,6 +39,14 @@ sub load {
     return $r;
 }
 
+# Update a mailbox record in the database. Dies with DBI error on failure
+# TODO do we need to update other fields apart from passwords?
+sub update {
+    my ($self, $user) = @_;
+    1 == $self->schema('mailbox')->update_password($user->password, $user->name)->rows
+        or die $self->schema('')->error;
+}
+
 sub delete {
     my ($self, $who) = @_;
     die "unimplemented";

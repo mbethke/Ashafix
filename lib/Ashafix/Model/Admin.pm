@@ -94,6 +94,14 @@ sub delete {
     return $self->schema('admin')->delete($who)->rows;
 }
 
+# Update an admin record in the database. Dies with DBI error on failure
+# TODO do we need to update other fields apart from passwords?
+sub update {
+    my ($self, $user) = @_;
+    1 == $self->schema('admin')->update_password($user->password, $user->name)->rows
+        or die $self->schema('')->error;
+}
+
 # Return a list of admin names
 sub list { shift->schema('admin')->get_all_admin_names->flat }
 
