@@ -62,23 +62,33 @@ sub create {
 
 sub load {
     my ($self, $name) = @_;
-    my $r = Ashafix::Result::Admin->new(@_);
+    my $r;
 
-    $r->name($name);
-    $r->roles({ admin => 1 });
-    if(defined $self->schema('domainadmin')->select_global_admin($name)->list) {
-        $r->roles->{globaladmin} = 1;
-        $r->domain_count('ALL'); # TODO is this still necessary?
-    } else {
-        $r->domain_count( 
-            scalar $self->schema('domainadmin')->select_domain_count($name)->list
-        );
-    };
-    
     if(my $row = $self->schema('admin')->select_admin($name)->hash) {
+        # Loading successful, create result object
+        $r = Ashafix::Result::Admin->new(@_);
+
+        # Copy/set attributes
+        $r->name($name);
+        $r->roles({ admin => 1 });
         $r->$_($row->{$_}) foreach(qw/created modified active password/);
+
+        # Load domain list
+        $r->domains([
+                map { $_->{domain} } $self->schema('domainadmin')->select_by_admin($name)->hashes
+            ]);
+
+        # TODO do we need the domain_count attribute?
+        # Contains "ALL" for global admins and a count for normal admins
+        if(defined $self->schema('domainadmin')->select_global_admin($name)->list) {
+            $r->roles->{globaladmin} = 1;
+            $r->domain_count('ALL'); # TODO is this still necessary?
+        } else {
+            $r->domain_count( 
+                scalar $self->schema('domainadmin')->select_domain_count($name)->list
+            );
+        };
     }
-    $r->domains([ map { $_->{domain} } $self->schema('domainadmin')->select_by_admin($name) ]);
     return $r;
 }
 

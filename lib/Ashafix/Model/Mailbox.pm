@@ -26,16 +26,19 @@ sub create {
 
 sub load {
     my ($self, $name) = @_;
-    my $r = Ashafix::Result::Mailbox->new(@_);
-
-    $r->name($name);
+    my $r;
     my ($local, $domain) = split /\@/, $name;
+
     my ($data) = $self->schema('mailbox')->get_mailbox_data($name, $domain)->hashes;
     if($data) {
-        $self->$_($data->{$_}) for(qw / name password created modified active /);
-        $self->roles->{user} = 1;
+        # Loading successful, create result object
+        $r = Ashafix::Result::Mailbox->new(@_);
+
+        # Copy/set attributes
+        $r->name($name);
+        $r->$_($data->{$_}) for(qw / name password created modified active /);
+        $r->roles({ user => 1 });
     };
-    
     return $r;
 }
 
