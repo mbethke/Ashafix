@@ -33,7 +33,7 @@ sub schema {
 sub dblog { shift->app->db_log(@_) }
 
 # Config shortcut
-sub cfg { shift->app->cfg(@_) }
+sub cfg { $_[0]->app->config->{$_[1]} }
 
 # Throw an exception with one argument
 sub throw {
