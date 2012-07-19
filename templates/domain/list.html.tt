@@ -50,7 +50,7 @@
             <td>[% dprop.modified %]</td>
             <td><a href="toggleactive?domain=[% dprop.domain %]">[% i18n(dprop.active ? 'YES' : 'NO') %]</a></td>
             <td><a href="[% urlfor('domain-edit', domain=dprop.domain) %]">[% i18n('edit') %]</a></td>
-            <td><a href="[% urlfor('domain-delete', domain=dprop.domain) %]" onclick="return confirm('[% i18n('confirm_domain') _ h.l('pAdminList_admin_domain') _ ": " _ dprop.domain %]'">[% h.l('del') %]</a></td>
+            <td><a href="[% urlfor('domain-delete', domain=dprop.domain) %]" onclick="return confirm('[% i18n('confirm_domain') _ i18n('pAdminList_admin_domain') _ ": " _ dprop.domain %]')">[% h.l('del') %]</a></td>
             </tr>
         [% END %]
    </table>
