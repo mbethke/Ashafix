@@ -42,8 +42,6 @@ sub setup_plugins {
 
     # Load config, keep a copy of the data structure for now
     my $config = $self->plugin(Config => {file => 'ashafix.conf' });
-    # Helper for quick config access
-    $self->helper(cfg => sub { $self->defaults($_[1]) });
 
     # Cross Site Request Forgery protection interferes with testing so
     # only enable it in production
