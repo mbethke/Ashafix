@@ -23,7 +23,6 @@ sub create {
     my $self = shift;
     my %params = @_;
     my $r = Ashafix::Result::Domain->new(@_);
-    my $conf = $self->cfg;
 
     $self->_check_existence($r->domain);
     $self->_check_domain_name($r->domain);
@@ -42,7 +41,7 @@ sub create {
         );
 
     if('on' eq $params{defaultaliases}) {
-        while(my ($alias, $dest) = each %{$conf->{default_aliases}}) {
+        while(my ($alias, $dest) = each %{$self->cfg('default_aliases')}) {
             $self->schema('alias')->insert("$alias\@$params{domain}", $dest, $params{domain}, 1);
         }
     }
@@ -96,8 +95,8 @@ sub aliases {
 # Check whether a domain exists in the database, dies with error if not
 sub _check_existence {
     my ($self, $domain) = @_;
-    my ($exists) = $self->schema('domain')->get_domain_props($domain)->hashes;
-    $self->throw('pAdminCreate_domain_domain_text_error') unless $exists;
+    my $exists = $self->schema('domain')->get_domain_props($domain)->hash;
+    $self->throw('pAdminCreate_domain_domain_text_error') if $exists;
 }
 
 # Check validity of a domain name
@@ -111,7 +110,7 @@ sub _check_domain_name {
         or $self->throw('pInvalidDomainRegex', encode_entities($domain));
 
     # Check working DNS lookup
-    if($self->cfg('config')->{emailcheck_resolve_domain}) {
+    if($self->cfg('emailcheck_resolve_domain')) {
         try {
             $val->mx($domain) or die "unresolvable";
         } catch {
@@ -123,7 +122,7 @@ sub _check_domain_name {
 # Run postcreation script specified in config
 sub _postcreation {
     my ($self, $domain) = @_;
-    my $script = $self->stash('config')->{domain_postcreation_script} or return 1;
+    my $script = $self->cfg('domain_postcreation_script') or return 1;
 
     unless(length $domain) {
         # TODO localize

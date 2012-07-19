@@ -41,16 +41,16 @@ sub create {
 
     try {
         $self->model('domain')->create(%params);
+        $self->show_info_l('pAdminCreate_domain_result_success');
     } catch {
-        $params{message} = $self->handle_exception($_);
+        $self->show_error($self->handle_exception($_));
     };
     return $self->render(%params);
 }
 
 sub delete {
     my $self = shift;
-    my $domain = $self->param('domain');
-
+    $self->model('domain')->delete($self->param('domain'));
     return $self->redirect_to('domain-list');
 }
 
