@@ -42,6 +42,9 @@ sub _add_flash  {
     $self->flash($what => [@$msgs, $msg]);
 }
 
+# Config shortcut
+sub cfg { $_[0]->app->config->{$_[1]} }
+
 # Return a localized message for a Mojo::Exception
 sub handle_exception {
     my ($self, $e) = @_;
