@@ -40,8 +40,8 @@ our %snippets = (
 );
 
 sub select_by_domain {
-    my ($self, $domain, $display, $page_size) = @_;
-    return Ashafix::Schema::query($snippets{select_by_domain}, $domain, $domain, $display, $page_size);
+    my ($self, $domain, $page_size, $offset) = @_;
+    return Ashafix::Schema::query($snippets{select_by_domain}, $domain, $domain, $page_size, $offset);
 }
 
 1;
