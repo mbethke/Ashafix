@@ -8,7 +8,6 @@ package Local::AliasStatus;
 #                only HTML output as colored bars in the account overview is
 #                implemented but something like JSON would make sense.
 #
-#         BUGS:  ---
 #       AUTHOR:  Matthias Bethke (mbethke), matthias@towiski.de
 #      COMPANY:  Zonarix S.A.
 #      VERSION:  1.0
@@ -18,12 +17,12 @@ package Local::AliasStatus;
 use 5.010;
 use strict;
 use warnings;
-use List::MoreUtils qw/any/;
+use List::MoreUtils qw/ any /;
 
 my $STATUS_NORMAL = 0;
 my $STATUS_HILITE = 1;
 
-my ($sstxt, $rec_delim, %colors);
+my ($sstxt, $strip_delim, $get_address, %colors);
 
 sub new
 {
@@ -33,13 +32,32 @@ sub new
         # Initialize package globals
         $sstxt = $ctrl->cfg('show_status_text');
         $colors{$_} = $ctrl->cfg("show_${_}_color") foreach(qw/ undeliverable popimap /);
-        $rec_delim = $ctrl->cfg('recipient_delimiter');
+        if(my $rec_delim = $ctrl->cfg('recipient_delimiter')) {
+            $strip_delim = sub {
+                my $s = $_[0];
+                $s =~ s/\Q$rec_delim\E[^\Q$rec_delim\E]*\@/@/o;
+                # Return both the original and the stripped version
+                return ($s, $_[0])
+            };
+            my $get_address = sub {
+                my ($ctrl, $goto, $catchall) = @_;
+                my $sans_delim;
+                ($sans_delim = $goto) =~ s/\Q$rec_delim\E[^\Q$rec_delim\E]*\@/@/o;
+                return ($ctrl->model('alias')->get_address($goto, $catchall, $sans_delim))[0];
+            };
+        } else {
+            my $get_address = sub {
+                my ($ctrl, $goto, $catchall) = @_;
+                $strip_delim = sub { $_[0] };
+                return ($ctrl->model('alias')->get_address($goto, $catchall))[0];
+            };
+        }
     }
 
     my $self = bless {
         alias           => $alias,
         destinations    => [
-            map { split /,/ } $ctrl->model('alias')->get_goto_by_address($alias)->flat
+            map { split /,/ } $ctrl->model('alias')->list_gotos($alias)
         ],
         deliverable     => $STATUS_NORMAL,
         popimap         => $STATUS_NORMAL,
@@ -61,19 +79,8 @@ sub _check_deliverable {
     DELIVERABLE:
     foreach my $goto (@{$self->{destinations}}) {
         my ($catchall) = $goto =~ /(\@.*)/;
-        my $addr;
 
-        # This will misbehave if the delimiter is "0". Your fault for choosing such
-        # an inane delimiter, use "+" or something.
-        if($rec_delim) {
-            my $sans_delim;
-            ($sans_delim = $goto) =~ s/\Q$rec_delim\E[^\Q$rec_delim\E]*\@/@/;
-            $addr = $ctrl->model('alias')->get_address_3($goto, $catchall, $sans_delim)->flat->[0];
-        } else {
-            $addr = $ctrl->model('alias')->get_address_2($goto, $catchall)->flat->[0];
-        }
-
-        unless($addr) {
+        unless(my $addr = $get_address->($ctrl, $goto, $catchall)) {
             state $vacation_domain = lc $ctrl->cfg('vacation_domain');
             # Address is not a known mailbox, check for vacation domain
             my $domain = lc substr $catchall, 1;
@@ -99,16 +106,8 @@ sub _check_popimap {
     my $self = shift;
     my $sans_delim = '';
 
-    my $stripdelim = $rec_delim ?
-    sub {
-        my $s = shift;
-        $s =~ s/\Q$rec_delim\E[^\Q$rec_delim\E]*\@/@/;
-        ($s, $_[0])
-    } :
-    sub { $_[0] };
-
     # If the address passed in appears in its own goto field, its POP/IMAP
-    $self->{popimap} = (any { $_ eq $self->{alias} } map { $stripdelim->($_) } @{$self->{dest}}) ?
+    $self->{popimap} = (any { $_ eq $self->{alias} } map { $strip_delim->($_) } @{$self->{dest}}) ?
     $STATUS_HILITE : $STATUS_NORMAL;
 }
 
@@ -141,11 +140,9 @@ sub html {
         }
     }
 
-    if($self->{custom_domain}) {
-        $s .= _html_colorstatus( $ccols->{firstidx { $_ eq $self->{custom_domain} } @$cdoms} );
-    } else {
-        $s .= "${sstxt}&nbsp;";
-    }
+    $s .= $self->{custom_domain} ?
+        _html_colorstatus( $ccols->{firstidx { $_ eq $self->{custom_domain} } @$cdoms} ) :
+        "${sstxt}&nbsp;";
 
     return $s;
 }
