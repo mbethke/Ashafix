@@ -39,14 +39,14 @@ sub new
                 # Return both the original and the stripped version
                 return ($s, $_[0])
             };
-            my $get_address = sub {
+            $get_address = sub {
                 my ($ctrl, $goto, $catchall) = @_;
                 my $sans_delim;
                 ($sans_delim = $goto) =~ s/\Q$rec_delim\E[^\Q$rec_delim\E]*\@/@/o;
                 return ($ctrl->model('alias')->get_address($goto, $catchall, $sans_delim))[0];
             };
         } else {
-            my $get_address = sub {
+            $get_address = sub {
                 my ($ctrl, $goto, $catchall) = @_;
                 $strip_delim = sub { $_[0] };
                 return ($ctrl->model('alias')->get_address($goto, $catchall))[0];
