@@ -5,8 +5,6 @@ package Ashafix::Schema::Aliasdomain;
 #
 #  DESCRIPTION:  Domain alias table
 #
-#         BUGS:  ---
-#        NOTES:  ---
 #       AUTHOR:  Matthias Bethke (mbethke), matthias@towiski.de
 #      COMPANY:  Zonarix S.A.
 #      VERSION:  1.0
@@ -20,9 +18,6 @@ use parent 'Ashafix::Schema::Base';
 
 our %queries = (
     delete_by_alias     => "DELETE FROM %table_alias_domain WHERE alias_domain=?",
-);
-
-our %snippets = (
     select_by_domain     => "SELECT alias_domain,target_domain,modified,active
     FROM %table_alias_domain
     WHERE alias_domain=? OR target_domain=?
@@ -38,10 +33,5 @@ our %snippets = (
     #                     active  =('t'==$row['active']) ? 1 : 0;
     delete_everything   => "DELETE FROM %table_alias_domain",
 );
-
-sub select_by_domain {
-    my ($self, $domain, $page_size, $offset) = @_;
-    return Ashafix::Schema::query($snippets{select_by_domain}, $domain, $domain, $page_size, $offset);
-}
 
 1;
