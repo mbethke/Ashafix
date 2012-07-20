@@ -5,9 +5,6 @@ package Ashafix::Controller::Virtual;
 #
 #  DESCRIPTION:  Virtual domains
 #
-#        FILES:  ---
-#         BUGS:  ---
-#        NOTES:  ---
 #       AUTHOR:  Matthias Bethke (mbethke), matthias@towiski.de
 #      COMPANY:  Zonarix S.A.
 #      VERSION:  1.0
@@ -20,17 +17,6 @@ use Mojo::Base 'Ashafix::Controller';
 use List::Util qw/min max/;
 use List::MoreUtils qw/any none/;
 use Local::AliasStatus;
-
-sub create {
-    my $self = shift;
-    die "unimplemented";
-}
-
-sub delete {
-    my $self = shift;
-    my $domain = $self->param('domain');
-    die "unimplemented";
-}
 
 sub list {
     my $self = shift;
@@ -45,7 +31,8 @@ sub list {
     $is_globaladmin = $self->auth_has_role('globaladmin');
 
     unless(@allowed_domains) {
-        $self->flash_error_l($is_globaladmin ? 'no_domains_exist' : 'no_domains_for_this_admin');
+        # TODO localize
+        $self->flash_error($is_globaladmin ? 'no_domains_exist' : 'no_domains_for_this_admin');
         return $self->redirect_to('domain-list');
     }
 
@@ -62,29 +49,25 @@ sub list {
     $self->session(list_virtual_sticky_domain => $domain);
 
     if($self->cfg('alias_domain')) {
-        @alias_domains = $self->schema('aliasdomain')->select_by_domain($domain, $page_size, $display)->hashes;
-        $can_create_alias_domain = none { $_->{target_domain} eq $domain } @alias_domains;
+        @alias_domains = $self->model('aliasdomain')->list_paged($domain, $page_size, $display);
+        $can_create_alias_domain = none { $_->target_domain eq $domain } @alias_domains;
         # TODO: set $can_create_alias_domain = 0; if all domains (of this admin) are already used as alias domains
     }
 
-    @aliases = $self->schema('complex')->get_addresses_by_domain(
+    @aliases = $self->model('domain')->list_addresses(
         search  => $search,
         domain  => $domain,
         offset  => $display,
         limit   => $page_size,
         domains => [ @allowed_domains ],
-    )->hashes;
+    );
 
-    @mailboxes = $self->schema('complex')->get_mailboxes(
+    @mailboxes = $self->model('domain')->list_mailboxes(
             search  => $search,
             domain  => $domain,
             offset  => $display,
             limit   => $page_size,
-            cfg     => {
-                map { ($_ => $self->cfg($_)) }
-                qw/ alias_control_admin vacation_control_admin used_quotas new_quota_table /
-            },
-    )->hashes;
+    );
 
     if($self->cfg('alias_control_admin')) {
         foreach my $mbox (@mailboxes) {

@@ -5,9 +5,6 @@ package Ashafix::Result::Mailbox;
 #
 #  DESCRIPTION: 
 #
-#        FILES: ---
-#         BUGS: ---
-#        NOTES: ---
 #       AUTHOR: Matthias Bethke (mbethke), matthias@towiski.de
 #      COMPANY: Zonarix S.A.
 #      VERSION: 1.0

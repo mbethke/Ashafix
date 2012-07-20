@@ -30,8 +30,8 @@ our %queries = (
 );
 
 our %snippets = (
-    get_domain_stats => "SELECT d.*,
-    COUNT(DISTINCT m.username) AS mailbox_count
+    get_domain_stats => "SELECT
+    d.*, COUNT(DISTINCT m.username) AS mailbox_count
     FROM %table_domain d
     LEFT JOIN %table_mailbox m ON d.domain=m.domain
     WHERE d.domain %where_clause
@@ -39,13 +39,12 @@ our %snippets = (
     d.quota, d.transport, d.backupmx, d.created, d.modified, d.active
     ORDER BY d.domain",
 
-    get_aliases_per_domain => "SELECT d.domain,
-    COUNT(DISTINCT a.address) AS alias_count
+    get_aliases_per_domain => "SELECT
+    d.domain, COUNT(DISTINCT a.address) AS alias_count
     FROM %table_domain d
     LEFT JOIN %table_alias a ON d.domain = a.domain
     WHERE d.domain %where_clause
-    GROUP BY d.domain
-    ORDER BY d.domain",
+    GROUP BY d.domain",
 
     get_addresses_by_domain => "SELECT address, goto, modified, active
     FROM %table_alias
@@ -77,6 +76,7 @@ sub _all_or_in_query {
     return Ashafix::Schema::query($sql, @_);
 }
 
+# Get a list of domains with an extra mailbox_count column
 sub get_domain_stats {
     my $self = shift;
     return $self->_all_or_in_query($snippets{get_domain_stats}, @_);
@@ -106,7 +106,7 @@ sub get_addresses_by_domain {
     $sql =~ s/%sql_where/$sql_where/;
     $sql =~ s/%sql_domain/$sql_domain/;
     # TODO do we need a different query for Postgres?
-    return Ashafix::Schema::query($sql, @params, map { 0+$_ } @args{qw /limit offset/});
+    return Ashafix::Schema::query($sql, @params, map { 0+$_ } @args{qw/ limit offset /});
     # TODO modify Postgres result:
     # $row['modified'] = date('Y-m-d H:i', strtotime($row['modified']));
     # $row['active']=('t'==$row['active']) ? 1 : 0;

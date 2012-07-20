@@ -66,17 +66,19 @@ sub delete {
     }
 }
 
-# Return a hash of hashes keyed by domain name according to the list of names
-# passed in; values are domain statistics
-# TODO does this make sense or should it return some kind of stats objects?
-sub stats {
-    my $self = shift;
-    my $s = $self->schema('complex');
+# Return a hash of Domain objects keyed by domain name according to the list of
+# names passed in
+sub stats { my $self = shift; my $s = $self->schema('complex'); my
+    %alias_counts = map { $_->{domain} => $_->{alias_count} }
+    $s->get_aliases_per_domain(@_)->hashes;
         
-    my %domain_props = map { $_->{domain} => $_ } $s->get_domain_stats(@_)->hashes;
-    $domain_props{$_->{domain}}{alias_count} = $_->{alias_count}
-        for $s->get_aliases_per_domain(@_)->hashes;
-    return \%domain_props;
+    return {
+        map {
+            $_->{domain} => Ashafix::Result::Domain->new(%$_,
+                alias_count => $alias_counts{$_->{domain}}
+            )
+        } $s->get_domain_stats(@_)->hashes
+    };
 }
 
 # Return a list of domain names for the admin name passed in, or all of them if 
@@ -87,12 +89,23 @@ sub list {
     return $self->schema('domain')->get_real_domains->flat;
 }
 
-sub aliases {
+# Return a list of hashes for all mailboxes and aliases.
+sub list_addresses {
     my $self = shift;
-    $self->schema('complex')->get_domain_stats(@_); 
+    return $self->schema('complex')->get_addresses_by_domain(@_)->hashes;
 }
 
-# Check whether a domain exists in the database, dies with error if not
+sub list_mailboxes {
+    my $self = shift;
+    return $self->schema('complex')->get_mailboxes(@_,
+        cfg => {
+            map { $_ => $self->cfg($_) }
+            qw/ alias_control_admin vacation_control_admin used_quotas new_quota_table /
+        },
+    )->hashes;
+}
+
+# Check whether a domain exists in the database, dies with error if so
 sub _check_existence {
     my ($self, $domain) = @_;
     my $exists = $self->schema('domain')->get_domain_props($domain)->hash;
